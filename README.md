@@ -1,4 +1,4 @@
-# MECA_BD_PS2: Equipo 12  - Repositorio del Problem Set 1
+# MECA_BD_PS2: Equipo 12  - Repositorio Problem Set 2
 
 *Solución al Problem Set 2 - Equipo 12 - Big Data and ML for Applied Economics - MEcA Uniandes, 2022-13*
 
