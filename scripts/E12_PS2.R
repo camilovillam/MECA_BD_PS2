@@ -13,23 +13,66 @@
 # 0. PRELIMINARES: PREPARACIÓN ESPACIO DE TRABAJO Y LIBRERÍAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-install.packages()
-install.packages()
+install.packages("rvest")
+install.packages("fabricatr")
+install.packages("stargazer")
+install.packages('GGally')# Se instala un paquete para gráficos
+install.packages("pacman")
 
-require()
-require()
-
-
+library(rvest)
+library(tidyverse)
+library(fabricatr)
+library(stargazer)
+library(caret)
+library(GGally)
+library(stargazer)
+library(tidyverse)
+library(tableone)
+library(caret)
+require(pacman)
+p_load(rio, 
+       tidyverse, 
+       skimr, 
+       caret,
+       rvest,
+       stargazer)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#1.1. ----
+#1.1. Cargue de las bases de datos ---- 
+
+setwd("~/GitHub/MECA_BD_PS2")
+submission_template <-read.csv("./stores/data/submission_template.csv")
+test_hogares <-read.csv("./stores/data/test_hogares.csv")
+test_personas <-read.csv("./stores/data/test_personas.csv")
+train_hogares <-read.csv("./stores/data/train_hogares.csv")
+train_personas <-read.csv("./stores/data/train_personas.csv.gz")
+
+
+#1.2. Definición de una única base de datos para el desarrollo del PS2 ----
+
+
+#1.3. Tablas descriptivas ---- 
+
+
+#Se usa la librería "CreateTableOne" para crear una tabla con todas las variables
+
+#Tabla_descr <- CreateTableOne(data = train_personas)
+#Tabla_descr
+#print(Tabla_descr,showAllLevels = TRUE)
+#summary(Tabla_descr)
+#Tabla_descr_csv <- print(Tabla_descr, exact = "stage", quote = FALSE, noSpaces = TRUE, printToggle = FALSE)
+#capture.output(Tabla_descr, file="Tabla_descr.doc")
+
+## Save to a CSV file
+#setwd("~/GitHub/MECA_BD_PS2")
+#write.csv(Tabla_descr_csv, file = "./views/tabla_descr.csv")
 
 
 
-#1.2. ----
+#1.4. Gráficas para el análisis de datos---- 
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
