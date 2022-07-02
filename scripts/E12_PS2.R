@@ -13,12 +13,18 @@
 # 0. PRELIMINARES: PREPARACIÓN ESPACIO DE TRABAJO Y LIBRERÍAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+#Limpiar el entorno:
+rm(list=ls())
+
+#Instalar librerías
 install.packages("rvest")
 install.packages("fabricatr")
 install.packages("stargazer")
 install.packages('GGally')# Se instala un paquete para gráficos
 install.packages("pacman")
+install.packages("arsenal")
 
+#Cargar librerías:
 library(rvest)
 library(tidyverse)
 library(fabricatr)
@@ -29,6 +35,7 @@ library(stargazer)
 library(tidyverse)
 library(tableone)
 library(caret)
+library(arsenal)
 require(pacman)
 p_load(rio, 
        tidyverse, 
@@ -51,10 +58,33 @@ train_hogares <-read.csv("./stores/data/train_hogares.csv")
 train_personas <-read.csv("./stores/data/train_personas.csv.gz")
 
 
-#1.2. Definición de una única base de datos para el desarrollo del PS2 ----
+#1.2. Exploración incial de los datos ----
+
+#Exploración de las bases de datos:
+skim(train_hogares)
+skim(test_hogares)
+skim(train_personas)
+skim(test_personas)
+
+#Variables en Hogares, comparación entre train y test:
+colnames(train_hogares)
+colnames(test_hogares)
+comparedf(train_hogares,test_hogares)
+summary(comparedf(train_hogares,test_hogares))
+
+#Variables en Personas, comparación entre train y test:
+colnames(train_personas)
+colnames(test_personas)
+comparedf(train_personas,test_personas)
+summary(comparedf(train_personas,test_personas))
 
 
-#1.3. Tablas descriptivas ---- 
+
+#1.3. Definición de una única base de datos para el desarrollo del PS2 ----
+
+
+
+#1.4. Tablas descriptivas ---- 
 
 
 #Se usa la librería "CreateTableOne" para crear una tabla con todas las variables
