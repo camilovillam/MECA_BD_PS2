@@ -23,6 +23,7 @@ install.packages("stargazer")
 install.packages('GGally')# Se instala un paquete para gráficos
 install.packages("pacman")
 install.packages("arsenal")
+install.packages("janitor")
 
 #Cargar librerías:
 library(rvest)
@@ -31,11 +32,10 @@ library(fabricatr)
 library(stargazer)
 library(caret)
 library(GGally)
-library(stargazer)
-library(tidyverse)
 library(tableone)
 library(caret)
 library(arsenal)
+library(janitor)
 require(pacman)
 p_load(rio, 
        tidyverse, 
@@ -69,13 +69,31 @@ skim(test_personas)
 #Variables en Hogares, comparación entre train y test:
 colnames(train_hogares)
 colnames(test_hogares)
+
+#Resumen de diferencias
+all_equal(train_hogares, test_hogares)
 comparedf(train_hogares,test_hogares)
+
+#Comparación de variables (columnas)
+compare_df_cols(train_hogares, test_hogares)
+
+#Comparación detallada:
 summary(comparedf(train_hogares,test_hogares))
+
 
 #Variables en Personas, comparación entre train y test:
 colnames(train_personas)
 colnames(test_personas)
+
+
+#Resumen de diferencias
+all_equal(train_personas,test_personas)
 comparedf(train_personas,test_personas)
+
+#Comparación de variables (columnas)
+compare_df_cols(train_personas,test_personas)
+
+#Comparación detallada:
 summary(comparedf(train_personas,test_personas))
 
 
