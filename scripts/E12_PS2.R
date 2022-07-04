@@ -103,6 +103,11 @@ summary(comparedf(train_personas,test_personas))
 #Se define la base de datos definitiva train_h
 train_h <- train_hogares
 
+#Resumen info de la variable P7045: Horas trabajadas en la semana 
+attach(train_personas)
+summary(P7045)#tiene 531230 NAs
+
+
 #Se crea la variable promedio horas trabajadas
 horas_trabajadas <- train_personas %>% 
   group_by(id,Clase,Dominio) %>%
@@ -114,6 +119,24 @@ train_h <-
              by = c("id","Clase","Dominio"))
 
 summarize(train_h, horas_trabajadas)#revisar en qué momento se debe limpiar la base de NAs
+
+#se crea la variable si en el hogar hay al menos una persona en edad de trabajar con ningun grado escolar aprobado
+#grado escolar : variable P6210 a. Ninguno
+#población en edad de trabajar: variable pet 1: sí 0: no
+
+#primero resumen de la variable
+attach(train_personas)
+summary(P6210)
+
+#Se crea la variable analfabeta_h que es un aproxy de al menos un analfabeta en el hogar en edad de trabajar
+analfabeta_h <- train_personas %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(analfabeta_h=if_else(any(Pet==1 && P6210==1), 1, 0))
+
+#Se agrega la variable analfabeta_h a la base train_h
+train_h <- 
+  inner_join(train_h, analfabeta_h,
+             by = c("id","Clase","Dominio"))
 
 #1.4. Definición de una única base de datos test para probar el modelo del PS2 ----
 
