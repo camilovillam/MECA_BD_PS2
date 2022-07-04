@@ -107,6 +107,28 @@ train_h <- train_hogares
 attach(train_personas)
 summary(P7045)#tiene 531230 NAs
 
+summary(train_personas$P7045)
+
+#Nota al margen, sobre attach:
+
+# The help page for attach() notes that attach can lead to confusion. The Google
+# R Style Manual provides clear advice on this point, providing the following
+# advice about attach(): The possibilities for creating errors when using attach
+# are numerous. Avoid it.
+#
+# After being burned by this one too many times, we concur.
+#
+#...
+# In short, there’s never an actual need to use attach(), using it can lead to
+# confusion or errors, and alternatives exists that avoid the problems. We
+# recommend against it.
+#
+#
+#https://www.r-bloggers.com/2011/05/to-attach-or-not-attach-that-is-the-question/
+#
+#(Esto me lo comentó mi prof. complementario en el curso anterior)
+#
+
 
 #Se crea la variable promedio horas trabajadas
 horas_trabajadas <- train_personas %>% 
@@ -128,6 +150,7 @@ summarize(train_h, horas_trabajadas)#revisar en qué momento se debe limpiar la 
 attach(train_personas)
 summary(P6210)
 
+
 #Se crea la variable analfabeta_h que es un aproxy de al menos un analfabeta en el hogar en edad de trabajar
 analfabeta_h <- train_personas %>% 
   group_by(id,Clase,Dominio) %>%
@@ -137,6 +160,23 @@ analfabeta_h <- train_personas %>%
 train_h <- 
   inner_join(train_h, analfabeta_h,
              by = c("id","Clase","Dominio"))
+
+
+#Alternativa para 1.3:
+# Con un solo group_by y luego con un solo join (debería ser lo mismo, solo por
+# "economizar" comandos y variables intermedias)
+
+train_personas_colaps <- train_personas %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(
+    horas_trabajadas=mean(P7045,na.rm = TRUE),
+    analfabeta_h=if_else(any(Pet==1 && P6210==1), 1, 0))
+
+#Nota, para revisar: ¿inner join vs left join?
+train_h_v2 <- 
+  inner_join(train_h, train_personas_colaps,
+             by = c("id","Clase","Dominio"))
+
 
 #1.4. Definición de una única base de datos test para probar el modelo del PS2 ----
 
@@ -177,6 +217,24 @@ analfabeta_h_t <- test_personas %>%
 test_h <- 
   inner_join(test_h, analfabeta_h_t,
              by = c("id","Clase","Dominio"))
+
+
+#Alternativa para 1.4:
+# Con un solo group_by y luego con un solo join
+
+test_personas_colaps <- test_personas %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(
+    horas_trabajadas_t=mean(P7045,na.rm = TRUE),
+    analfabeta_h_t=if_else(any(Pet==1 && P6210==1), 1, 0))
+
+
+#Nota, para revisar: ¿inner join vs left join?
+test_h_v2 <- 
+  inner_join(test_h, test_personas_colaps,
+             by = c("id","Clase","Dominio"))
+
+
 
 #1.5. Identificar NAs base train_h ---- 
 
