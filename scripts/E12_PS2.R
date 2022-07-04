@@ -98,61 +98,31 @@ summary(comparedf(train_personas,test_personas))
 
 
 
-#1.3. Definición de una única base de datos train para armar el modelo del PS2 ----
+#1.3. Definición base train----
 
 #Se define la base de datos train_h
 train_h <- train_hogares
 
-#Resumen info de la variable P7045: Horas trabajadas en la semana 
-summary(train_personas$P7045)#tiene 531230 NAs
-
-#Se crea la variable promedio horas trabajadas
-horas_trabajadas <- train_personas %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(horas_trabajadas=mean(P7045,na.rm = TRUE))
-
-#Se agrega la variable horas trabajadas a la base train_h
-train_h <- 
-  inner_join(train_h, horas_trabajadas,
-             by = c("id","Clase","Dominio"))
-
-summarize(train_h, horas_trabajadas)#revisar en qué momento se debe limpiar la base de NAs
-
-#se crea la variable si en el hogar hay al menos una persona en edad de trabajar con ningun grado escolar aprobado
-#grado escolar : variable P6210 a. Ninguno
-#población en edad de trabajar: variable pet 1: sí 0: no
-
-#primero resumen de la variable
-summary(train_personas$P6210)#tiene 22685 NAs
-
-#Se crea la variable analfabeta_h que es un aproxy de al menos un analfabeta en el hogar en edad de trabajar
-analfabeta_h <- train_personas %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(analfabeta_h=if_else(any(Pet==1 && P6210==1), 1, 0))
-
-#Se agrega la variable analfabeta_h a la base train_h
-train_h <- 
-  inner_join(train_h, analfabeta_h,
-             by = c("id","Clase","Dominio"))
-
-
-#Alternativa para 1.3:
-# Con un solo group_by y luego con un solo join (debería ser lo mismo, solo por
-# "economizar" comandos y variables intermedias)
+#Resumen de variables
+summary(test_personas$P7045)#NAs 214275 
+summary(test_personas$Pet)#NAs 38829
+summary(test_personas$P6210)#NAs 9242
+summary(test_personas$P6020)
+summary(test_personas$P6050)
 
 train_personas_colaps <- train_personas %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
-    horas_trabajadas=mean(P7045,na.rm = TRUE),
-    analfabeta_h=if_else(any(Pet==1 && P6210==1), 1, 0))
+    horas_trabajadas=mean(P7045,na.rm = TRUE), # Se crea la var horas trabajadas
+    analfabeta_h=if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
+    mujer_jf_h=if_else(any(P6020==2 && P6050==1), 1, 0)) # Se crea la var mujer jefe de hogar
 
 #Nota, para revisar: ¿inner join vs left join?
-train_h_v2 <- 
+train_h_ <- 
   inner_join(train_h, train_personas_colaps,
              by = c("id","Clase","Dominio"))
 
-
-#1.4. Definición de una única base de datos test para probar el modelo del PS2 ----
+#1.4. Definición base test ----
 
 #Se define la base de datos test_h
 test_h <- test_hogares
@@ -302,8 +272,6 @@ orden <- porcentaje_na$variable[length(porcentaje_na$variable):1]
 porcentaje_na$variable <- factor(porcentaje_na$variable,
                                  levels = orden)
 
-
-
 # Se grafica el % de NA de las diferentes variables de interés
 ggplot(porcentaje_na[1:nrow(porcentaje_na),], 
        aes(y = variable, x = cantidad_na)) +
@@ -315,7 +283,7 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
   labs(x = "Porcentaje de NAs", y = "Variables") +
   scale_x_continuous(labels = scales::percent, limits = c(0, 1))
 
-#1.6. Tablas descriptivas ---- 
+#1.7. Tablas descriptivas ---- 
 
 #Se usa la librería "CreateTableOne" para crear una tabla con todas las variables
 
@@ -331,8 +299,7 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
 #write.csv(Tabla_descr_csv, file = "./views/tabla_descr.csv")
 
 
-
-#1.6. Gráficas para el análisis de datos---- 
+#1.8. Gráficas para el análisis de datos---- 
 
 summary(test_h$Lp)
 ggplot(test_h, aes(x = horas_trabajadas_t, y = Lp)) +
