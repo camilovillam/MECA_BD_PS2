@@ -100,7 +100,7 @@ summary(comparedf(train_personas,test_personas))
 
 #1.3. Definición de una única base de datos train para armar el modelo del PS2 ----
 
-#Se define la base de datos definitiva train_h
+#Se define la base de datos train_h
 train_h <- train_hogares
 
 #Resumen info de la variable P7045: Horas trabajadas en la semana 
@@ -140,14 +140,150 @@ train_h <-
 
 #1.4. Definición de una única base de datos test para probar el modelo del PS2 ----
 
+#Se define la base de datos test_h
+test_h <- test_hogares
+
+#Resumen info de la variable P7045: Horas trabajadas en la semana 
+attach(test_personas)
+summary(P7045)#tiene 214275 NAs
 
 
-#1.5. Tablas descriptivas ---- 
+#Se crea la variable promedio horas trabajadas
+horas_trabajadas_t <- test_personas %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(horas_trabajadas_t=mean(P7045,na.rm = TRUE))
 
+#Se agrega la variable horas trabajadas a la base train_h
+test_h <- 
+  inner_join(test_h, horas_trabajadas_t,
+             by = c("id","Clase","Dominio"))
+
+summarize(test_h, horas_trabajadas_t)#revisar en qué momento se debe limpiar la base de NAs
+
+#se crea la variable si en el hogar hay al menos una persona en edad de trabajar con ningun grado escolar aprobado
+#grado escolar : variable P6210 a. Ninguno
+#población en edad de trabajar: variable pet 1: sí 0: no
+
+#primero resumen de la variable
+attach(test_personas)
+summary(P6210)
+
+#Se crea la variable analfabeta_h_t que es un aproxy de al menos un analfabeta en el hogar en edad de trabajar
+analfabeta_h_t <- test_personas %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(analfabeta_h_t=if_else(any(Pet==1 && P6210==1), 1, 0))
+
+#Se agrega la variable analfabeta_h_t a la base train_h
+test_h <- 
+  inner_join(test_h, analfabeta_h_t,
+             by = c("id","Clase","Dominio"))
+
+#1.5. Identificar NAs base train_h ---- 
+
+cantidad_na <- sapply(train_h, function(x) sum(is.na(x)))
+cantidad_na <- data.frame(cantidad_na)
+porcentaje_na <- cantidad_na/nrow(train_h)
+
+# Porcentaje de observaciones faltantes. 
+p <- mean(porcentaje_na[,1])
+print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
+#En promedio el 11.93% de las entradas están vacías"
+
+#Se visualiza el porcentaje de observaciones faltantes por variable
+
+# se ordena de mayor a menor
+porcentaje_na <- arrange(porcentaje_na, desc(cantidad_na))
+
+# se convierte el nombre de la fila en columna
+porcentaje_na <- rownames_to_column(porcentaje_na, "variable")
+
+# # se quitan las variables que no tienen NAs
+filtro <- porcentaje_na$cantidad_na == 0
+variables_sin_na <- porcentaje_na[filtro, "variable"]
+variables_sin_na <- paste(variables_sin_na, collapse = ", ")
+print(paste("Las variables sin NAs son:", variables_sin_na))
+# 
+porcentaje_na <- porcentaje_na[!filtro,]
+# 
+orden <- porcentaje_na$variable[length(porcentaje_na$variable):1]
+
+porcentaje_na$variable <- factor(porcentaje_na$variable,
+                                 levels = orden)
+
+
+
+# Se grafica el % de NA de las diferentes variables de interés
+ggplot(porcentaje_na[1:nrow(porcentaje_na),], 
+       aes(y = variable, x = cantidad_na)) +
+  geom_bar(stat = "identity", fill = "darkblue") +
+  geom_text(aes(label = paste0(round(100*cantidad_na, 1), "%")),
+            colour = "white", position = "dodge", hjust = 1.3,
+            size = 2, fontface = "bold") +
+  theme_classic() +
+  labs(x = "Porcentaje de NAs", y = "Variables") +
+  scale_x_continuous(labels = scales::percent, limits = c(0, 1))
+
+### OJO SE BORRAN LOS NA PARA PROBAR
+filtro <- porcentaje_na$cantidad_na > 0.05
+variables_eliminar <- porcentaje_na$variable[filtro]
+k0 <- ncol(train_h)
+db <- train_h %>%
+  select(variables_eliminar)
+k1 <- ncol(train_h)
+print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
+#revisar porque no están borrando..... 
+
+
+#1.6. Identificar NAs base test_h ---- 
+
+cantidad_na <- sapply(train_h, function(x) sum(is.na(x)))
+cantidad_na <- data.frame(cantidad_na)
+porcentaje_na <- cantidad_na/nrow(test_h)
+
+# Porcentaje de observaciones faltantes. 
+p <- mean(porcentaje_na[,1])
+print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
+#En promedio el 29.74% de las entradas están vacías"
+
+#Se visualiza el porcentaje de observaciones faltantes por variable
+
+# se ordena de mayor a menor
+porcentaje_na <- arrange(porcentaje_na, desc(cantidad_na))
+
+# se convierte el nombre de la fila en columna
+porcentaje_na <- rownames_to_column(porcentaje_na, "variable")
+
+# # se quitan las variables que no tienen NAs
+filtro <- porcentaje_na$cantidad_na == 0
+variables_sin_na <- porcentaje_na[filtro, "variable"]
+variables_sin_na <- paste(variables_sin_na, collapse = ", ")
+print(paste("Las variables sin NAs son:", variables_sin_na))
+# 
+porcentaje_na <- porcentaje_na[!filtro,]
+# 
+orden <- porcentaje_na$variable[length(porcentaje_na$variable):1]
+
+porcentaje_na$variable <- factor(porcentaje_na$variable,
+                                 levels = orden)
+
+
+
+# Se grafica el % de NA de las diferentes variables de interés
+ggplot(porcentaje_na[1:nrow(porcentaje_na),], 
+       aes(y = variable, x = cantidad_na)) +
+  geom_bar(stat = "identity", fill = "darkblue") +
+  geom_text(aes(label = paste0(round(100*cantidad_na, 1), "%")),
+            colour = "white", position = "dodge", hjust = 1.3,
+            size = 2, fontface = "bold") +
+  theme_classic() +
+  labs(x = "Porcentaje de NAs", y = "Variables") +
+  scale_x_continuous(labels = scales::percent, limits = c(0, 1))
+
+#1.6. Tablas descriptivas ---- 
 
 #Se usa la librería "CreateTableOne" para crear una tabla con todas las variables
 
-#Tabla_descr <- CreateTableOne(data = train_personas)
+#Tabla_descr <- CreateTableOne(data = train_h)
 #Tabla_descr
 #print(Tabla_descr,showAllLevels = TRUE)
 #summary(Tabla_descr)
@@ -160,9 +296,14 @@ train_h <-
 
 
 
-#1.4. Gráficas para el análisis de datos---- 
+#1.6. Gráficas para el análisis de datos---- 
 
-
+ggplot(test_h, aes(x = horas_trabajadas_t, y = Lp)) +
+  geom_point(color = "darkblue", alpha = 0.5) +
+  theme_classic() +
+  scale_y_continuous(labels = scales::dollar) +
+  # scale_y_continuous(labels = scales::dollar, trans = 'log10') +
+  labs(x = "Horas trabajadas", y = "Línea pobreza")
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 2. MODELOS DE CLASIFICACIÓN DE POBREZA----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
