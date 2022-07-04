@@ -51,11 +51,11 @@ p_load(rio,
 #1.1. Cargue de las bases de datos ---- 
 
 setwd("~/GitHub/MECA_BD_PS2")
-submission_template <-read.csv("./stores/data/submission_template.csv")
-test_hogares <-read.csv("./stores/data/test_hogares.csv")
-test_personas <-read.csv("./stores/data/test_personas.csv")
-train_hogares <-read.csv("./stores/data/train_hogares.csv")
-train_personas <-read.csv("./stores/data/train_personas.csv.gz")
+submission_template <-read.csv("./stores/20220703_data/submission_template.csv")
+test_hogares <-readRDS("./stores/20220703_data/test_hogares.rds")
+test_personas <-readRDS("./stores/20220703_data/test_personas.rds")
+train_hogares <-readRDS("./stores/20220703_data/train_hogares.rds")
+train_personas <-readRDS("./stores/20220703_data/train_personas.rds")
 
 
 #1.2. Exploración incial de los datos ----
