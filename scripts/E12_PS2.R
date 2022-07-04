@@ -98,11 +98,28 @@ summary(comparedf(train_personas,test_personas))
 
 
 
-#1.3. Definición de una única base de datos para el desarrollo del PS2 ----
+#1.3. Definición de una única base de datos train para armar el modelo del PS2 ----
+
+#Se define la base de datos definitiva train_h
+train_h <- train_hogares
+
+#Se crea la variable promedio horas trabajadas
+horas_trabajadas <- train_personas %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(horas_trabajadas=mean(P7045,na.rm = TRUE))
+
+#Se agrega la variable horas trabajadas a la base train_h
+train_h <- 
+  inner_join(train_h, horas_trabajadas,
+             by = c("id","Clase","Dominio"))
+
+summarize(train_h, horas_trabajadas)#revisar en qué momento se debe limpiar la base de NAs
+
+#1.4. Definición de una única base de datos test para probar el modelo del PS2 ----
 
 
 
-#1.4. Tablas descriptivas ---- 
+#1.5. Tablas descriptivas ---- 
 
 
 #Se usa la librería "CreateTableOne" para crear una tabla con todas las variables
