@@ -104,31 +104,7 @@ summary(comparedf(train_personas,test_personas))
 train_h <- train_hogares
 
 #Resumen info de la variable P7045: Horas trabajadas en la semana 
-attach(train_personas)
-summary(P7045)#tiene 531230 NAs
-
-summary(train_personas$P7045)
-
-#Nota al margen, sobre attach:
-
-# The help page for attach() notes that attach can lead to confusion. The Google
-# R Style Manual provides clear advice on this point, providing the following
-# advice about attach(): The possibilities for creating errors when using attach
-# are numerous. Avoid it.
-#
-# After being burned by this one too many times, we concur.
-#
-#...
-# In short, there’s never an actual need to use attach(), using it can lead to
-# confusion or errors, and alternatives exists that avoid the problems. We
-# recommend against it.
-#
-#
-#https://www.r-bloggers.com/2011/05/to-attach-or-not-attach-that-is-the-question/
-#
-#(Esto me lo comentó mi prof. complementario en el curso anterior)
-#
-
+summary(train_personas$P7045)#tiene 531230 NAs
 
 #Se crea la variable promedio horas trabajadas
 horas_trabajadas <- train_personas %>% 
@@ -147,9 +123,7 @@ summarize(train_h, horas_trabajadas)#revisar en qué momento se debe limpiar la 
 #población en edad de trabajar: variable pet 1: sí 0: no
 
 #primero resumen de la variable
-attach(train_personas)
-summary(P6210)
-
+summary(train_personas$P6210)#tiene 22685 NAs
 
 #Se crea la variable analfabeta_h que es un aproxy de al menos un analfabeta en el hogar en edad de trabajar
 analfabeta_h <- train_personas %>% 
@@ -184,9 +158,7 @@ train_h_v2 <-
 test_h <- test_hogares
 
 #Resumen info de la variable P7045: Horas trabajadas en la semana 
-attach(test_personas)
-summary(P7045)#tiene 214275 NAs
-
+summary(test_personas$P7045)#tiene 214275 NAs
 
 #Se crea la variable promedio horas trabajadas
 horas_trabajadas_t <- test_personas %>% 
@@ -205,8 +177,7 @@ summarize(test_h, horas_trabajadas_t)#revisar en qué momento se debe limpiar la
 #población en edad de trabajar: variable pet 1: sí 0: no
 
 #primero resumen de la variable
-attach(test_personas)
-summary(P6210)
+summary(test_personas$P6210)#tiene 9242 NAs
 
 #Se crea la variable analfabeta_h_t que es un aproxy de al menos un analfabeta en el hogar en edad de trabajar
 analfabeta_h_t <- test_personas %>% 
@@ -281,6 +252,7 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
   labs(x = "Porcentaje de NAs", y = "Variables") +
   scale_x_continuous(labels = scales::percent, limits = c(0, 1))
 
+require(tidyverse)
 ### OJO SE BORRAN LOS NA PARA PROBAR
 filtro <- porcentaje_na$cantidad_na > 0.05
 variables_eliminar <- porcentaje_na$variable[filtro]
@@ -291,6 +263,12 @@ k1 <- ncol(train_h)
 print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
 #revisar porque no están borrando..... 
 
+# Prueba borrado manual
+vars_drop <- c("P5100", "horas_trabajadas", "P5140", "P5130", "analfabeta_h")
+train_h_v3 <- train_h[,!(names(train_h) %in% vars_drop)]
+k0 <- ncol(train_h)
+k1 <- ncol(train_h_v3)
+print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
 
 #1.6. Identificar NAs base test_h ---- 
 
@@ -356,6 +334,7 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
 
 #1.6. Gráficas para el análisis de datos---- 
 
+summary(test_h$Lp)
 ggplot(test_h, aes(x = horas_trabajadas_t, y = Lp)) +
   geom_point(color = "darkblue", alpha = 0.5) +
   theme_classic() +
