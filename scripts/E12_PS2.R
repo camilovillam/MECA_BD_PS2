@@ -104,21 +104,27 @@ summary(comparedf(train_personas,test_personas))
 train_h <- train_hogares
 
 #Resumen de variables
-summary(test_personas$P7045)#NAs 214275 
-summary(test_personas$Pet)#NAs 38829
-summary(test_personas$P6210)#NAs 9242
-summary(test_personas$P6020)
-summary(test_personas$P6050)
+summary(train_personas$P6800)#Horas trabajadas NAs 294901 
+summary(train_personas$Pet)#Población en edad de trabajar- NAs 95438
+summary(train_personas$P6210)#Nivel educativo - NAs 22685
+summary(train_personas$P6020)#Sexo 1 hombre 2 mujer 
+summary(train_personas$P6050)#Parentezco con el jefe de hogar
+summary(train_personas$P6040)#Edad
 
 train_personas_colaps <- train_personas %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
-    horas_trabajadas=mean(P7045,na.rm = TRUE), # Se crea la var horas trabajadas
-    analfabeta_h=if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
-    mujer_jf_h=if_else(any(P6020==2 && P6050==1), 1, 0)) # Se crea la var mujer jefe de hogar
+    horas_trabajadas=mean(P6800,na.rm = TRUE), # Se crea la var horas trabajadas
+    analfabeta_h = if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
+    mujer_jf_h = if_else(any(P6020==2 && P6050==1), 1, 0),# Se crea la var mujer jefe de hogar
+    jf_10_18_h = if_else(any(P6050==1 && P6040>=10 && P6040<=18), 1, 0),#Se crea la var jefe de hogar entre 10 y 18 años
+    jf_19_28_h = if_else(any(P6050==1 && P6040>=19 && P6040<=28), 1, 0), #Se crea la var jefe de hogar entre 19 y 28 años
+    jf_29_59_h = if_else(any(P6050==1 && P6040>=29 && P6040<=59), 1, 0), #Se crea la var jefe de hogar entre 29 y 59 años 
+    jf_60_h = if_else(any(P6050==1 && P6040<=60), 1, 0) ) #Se crea la var jefe de hogar mayores de 60 años
+
 
 #Nota, para revisar: ¿inner join vs left join?
-train_h_ <- 
+train_h <- 
   inner_join(train_h, train_personas_colaps,
              by = c("id","Clase","Dominio"))
 
@@ -127,55 +133,29 @@ train_h_ <-
 #Se define la base de datos test_h
 test_h <- test_hogares
 
-#Resumen info de la variable P7045: Horas trabajadas en la semana 
-summary(test_personas$P7045)#tiene 214275 NAs
-
-#Se crea la variable promedio horas trabajadas
-horas_trabajadas_t <- test_personas %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(horas_trabajadas_t=mean(P7045,na.rm = TRUE))
-
-#Se agrega la variable horas trabajadas a la base train_h
-test_h <- 
-  inner_join(test_h, horas_trabajadas_t,
-             by = c("id","Clase","Dominio"))
-
-summarize(test_h, horas_trabajadas_t)#revisar en qué momento se debe limpiar la base de NAs
-
-#se crea la variable si en el hogar hay al menos una persona en edad de trabajar con ningun grado escolar aprobado
-#grado escolar : variable P6210 a. Ninguno
-#población en edad de trabajar: variable pet 1: sí 0: no
-
-#primero resumen de la variable
-summary(test_personas$P6210)#tiene 9242 NAs
-
-#Se crea la variable analfabeta_h_t que es un aproxy de al menos un analfabeta en el hogar en edad de trabajar
-analfabeta_h_t <- test_personas %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(analfabeta_h_t=if_else(any(Pet==1 && P6210==1), 1, 0))
-
-#Se agrega la variable analfabeta_h_t a la base train_h
-test_h <- 
-  inner_join(test_h, analfabeta_h_t,
-             by = c("id","Clase","Dominio"))
-
-
-#Alternativa para 1.4:
-# Con un solo group_by y luego con un solo join
+#Resumen de variables
+summary(test_personas$P6800)#Horas trabajadas NAs 119837 
+summary(test_personas$Pet)#Población en edad de trabajar- NAs 38829
+summary(test_personas$P6210)#Nivel educativo - NAs 9242
+summary(test_personas$P6020)#Sexo 1 hombre 2 mujer 
+summary(test_personas$P6050)#Parentezco con el jefe de hogar
+summary(test_personas$P6040)#Edad
 
 test_personas_colaps <- test_personas %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
-    horas_trabajadas_t=mean(P7045,na.rm = TRUE),
-    analfabeta_h_t=if_else(any(Pet==1 && P6210==1), 1, 0))
-
+    horas_trabajadas_t = mean(P6800,na.rm = TRUE), # Se crea la var horas trabajadas
+    analfabeta_h_t = if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
+    mujer_jf_h_t = if_else(any(P6020==2 && P6050==1), 1, 0),# Se crea la var mujer jefe de hogar
+    jf_10_18_h_t = if_else(any(P6050==1 && P6040>=10 && P6040<=18), 1, 0),#Se crea la var jefe de hogar entre 10 y 18 años
+    jf_19_28_h_t = if_else(any(P6050==1 && P6040>=19 && P6040<=28), 1, 0), #Se crea la var jefe de hogar entre 19 y 28 años
+    jf_29_59_h_t= if_else(any(P6050==1 && P6040>=29 && P6040<=59), 1, 0), #Se crea la var jefe de hogar entre 29 y 59 años 
+    jf_60_h_t = if_else(any(P6050==1 && P6040<=60), 1, 0) ) #Se crea la var jefe de hogar mayores de 60 años
 
 #Nota, para revisar: ¿inner join vs left join?
-test_h_v2 <- 
+test_h <- 
   inner_join(test_h, test_personas_colaps,
              by = c("id","Clase","Dominio"))
-
-
 
 #1.5. Identificar NAs base train_h ---- 
 
@@ -233,7 +213,7 @@ k1 <- ncol(train_h)
 print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
 #revisar porque no están borrando..... 
 
-# Prueba borrado manual
+# Prueba borrado manual--- ajustar o borrar
 vars_drop <- c("P5100", "horas_trabajadas", "P5140", "P5130", "analfabeta_h")
 train_h_v3 <- train_h[,!(names(train_h) %in% vars_drop)]
 k0 <- ncol(train_h)
@@ -301,13 +281,21 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
 
 #1.8. Gráficas para el análisis de datos---- 
 
-summary(test_h$Lp)
-ggplot(test_h, aes(x = horas_trabajadas_t, y = Lp)) +
-  geom_point(color = "darkblue", alpha = 0.5) +
-  theme_classic() +
-  scale_y_continuous(labels = scales::dollar) +
-  # scale_y_continuous(labels = scales::dollar, trans = 'log10') +
-  labs(x = "Horas trabajadas", y = "Línea pobreza")
+#prueba 1 de gráfica
+ggplot(train_h, aes(x=horas_trabajadas, y=Ingtotug,color=mujer_jf_h)) + 
+  geom_point(aes(color=factor(mujer_jf_h))) +
+  labs(x='horas trabajadas', y='Ingreso total', title='horas trabajdas vs. ingreso total')
+
+#prueba 2 de gráfica
+Conf2x2 = matrix(c(2:2), nrow=4, byrow=FALSE)
+layout(Conf2x2)
+hist(train_h$Ingtotug,main = "Histograma Ingreso total", xlab = "Ingreso total", col = "skyblue4")
+hist(train_h$horas_trabajadas,main = "Histograma Horas Trabajadas", xlab = "Horas Trabajadas", col = "skyblue4")
+boxplot(train_h$Ingtotug,main = "Boxplot Ingreso total", xlab = "Ingreso total", col = "skyblue4")
+boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Horas Trabajadas", col = "skyblue4")
+
+#prueba 3 de gráfica
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 2. MODELOS DE CLASIFICACIÓN DE POBREZA----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
