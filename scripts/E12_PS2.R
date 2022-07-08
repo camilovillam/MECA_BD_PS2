@@ -128,6 +128,10 @@ train_h <-
   inner_join(train_h, train_personas_colaps,
              by = c("id","Clase","Dominio"))
 
+#Se guarda la base de datos en un archivo .rds
+setwd("~/GitHub/MECA_BD_PS2")
+saveRDS(train_h,"./stores/train_h.rds")
+
 #1.4. Definición base test ----
 
 #Se define la base de datos test_h
@@ -156,6 +160,10 @@ test_personas_colaps <- test_personas %>%
 test_h <- 
   inner_join(test_h, test_personas_colaps,
              by = c("id","Clase","Dominio"))
+
+#Se guarda la base de datos en un archivo .rds
+setwd("~/GitHub/MECA_BD_PS2")
+saveRDS(test_h,"./stores/test_h.rds")
 
 #1.5. Identificar NAs base train_h ---- 
 
