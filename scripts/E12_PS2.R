@@ -24,6 +24,7 @@ install.packages('GGally')# Se instala un paquete para gráficos
 install.packages("pacman")
 install.packages("arsenal")
 install.packages("janitor")
+install.packages("gamlr")
 
 #Cargar librerías:
 library(rvest)
@@ -37,6 +38,7 @@ library(caret)
 library(arsenal)
 library(janitor)
 require(pacman)
+require(gamlr)
 p_load(rio, 
        tidyverse, 
        skimr, 
@@ -309,11 +311,49 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-#2.2. ----
+
+#2.1. Partición de la base de datos en tres----
+
+#La base de datos Train se divide en tres particiones:
+# Tr_train: Entrenar el modelo
+# Tr_eval: Evaluar, ajustar y refinar el modelo
+# Tr_test: Probar el modelo
+
+
+set.seed(100)
+split1 <- createDataPartition(train_h_v3$Pobre, p = .7)[[1]]
+length(split1)
+
+other <- train_h_v3[-Tr_train,]
+Tr_train <- train_h_v3[ Tr_train,]
+
+set.seed(200)
+split2 <- createDataPartition(other$Pobre, p = 1/3)[[1]]
+
+Tr_eval <- other[ split2,]
+Tr_test <- other[-split2,]
+
+
+#2.2. Modelo logit ----
+
+#Se guarda la fórmula del modelo (para poderlo variar luego)
+form_logit_1 <- as.formula("Pobre~ Ingpcug+factor(mujer_jf_h)")
+
+#Se entrena el modelo logit
+mod_logit_1 <-  glm(form_logit_1,
+                    data= Tr_train,
+                    family="binomial")
+
+
+summary(mod_logit_1 ,type="text")
 
 
 
-#2.2. ----
+
+#2.3. ----
+
+
+#2.4. ----
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
