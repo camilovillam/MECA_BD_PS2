@@ -100,6 +100,46 @@ summary(comparedf(train_personas,test_personas))
 
 #1.3. Definición base train----
 
+#Prueba pivot
+train_h0 <- train_hogares
+
+df_train_pivot <-  train_personas %>% pivot_wider(names_from = P6050, 
+                                                  values_from = P6040, 
+                                                  names_prefix = "edad",
+                                                  values_fill = 0)
+
+
+train_personas_colaps <- df_train_pivot %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(
+    edad_p1 = sum (edad1,na.rm = TRUE), 
+    edad_p2 = sum (edad1,na.rm = TRUE), 
+    edad_p3 = sum (edad1,na.rm = TRUE), 
+    edad_p4 = sum (edad1,na.rm = TRUE), 
+    edad_p5 = sum (edad1,na.rm = TRUE), 
+    edad_p6 = sum (edad1,na.rm = TRUE), 
+    edad_p7 = sum (edad1,na.rm = TRUE), 
+    edad_p8 = sum (edad1,na.rm = TRUE),
+    edad_p9 = sum (edad1,na.rm = TRUE))
+    
+train_personas_colaps <- train_personas %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(    
+    horas_trabajadas=mean(P6800,na.rm = TRUE), # Se crea la var horas trabajadas
+    analfabeta_h = if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
+    mujer_jf_h = if_else(any(P6020==2 && P6050==1), 1, 0),# Se crea la var mujer jefe de hogar
+    jf_10_18_h = if_else(any(P6050==1 && P6040>=10 && P6040<=18), 1, 0),#Se crea la var jefe de hogar entre 10 y 18 años
+    jf_19_28_h = if_else(any(P6050==1 && P6040>=19 && P6040<=28), 1, 0), #Se crea la var jefe de hogar entre 19 y 28 años
+    jf_29_59_h = if_else(any(P6050==1 && P6040>=29 && P6040<=59), 1, 0), #Se crea la var jefe de hogar entre 29 y 59 años 
+    jf_60_h = if_else(any(P6050==1 && P6040<=60), 1, 0) ) #Se crea la var jefe de hogar mayores de 60 años
+
+
+#Nota, para revisar: ¿inner join vs left join?
+train_h0 <- 
+  inner_join(train_h0, train_personas_colaps,
+             by = c("id","Clase","Dominio"))
+
+
 #Se define la base de datos train_h
 train_h <- train_hogares
 
