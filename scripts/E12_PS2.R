@@ -458,7 +458,302 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 # 3. PREPARACIÓN DE LA BASE DE DATOS TEST Y ESTADÍSTICAS DESCRIPTIVAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+#3.1. Primera definición base test----
 
+test_h0 <- test_hogares
+
+#Resumen de variables del test personas
+summary(test_personas$P6800)#Horas trabajadas NAs 119837
+summary(test_personas$Pet)#Población en edad de trabajar- NAs 38829
+summary(test_personas$P6210)#Nivel educativo - NAs 9242
+summary(test_personas$P6020)#Sexo 1 hombre 2 mujer 
+summary(test_personas$P6050)#Parentezco con el jefe de hogar
+summary(test_personas$P6040)#Edad
+summary(test_personas$Oficio)#oficio
+
+#Se hace un pivot de variables del test personas
+
+edad_pivot <- test_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
+                                               values_from = P6040,#edad 
+                                               names_prefix = "edad",
+                                               values_fill = 0)
+
+edad_pivot <- subset(edad_pivot,
+                     select = c(id,
+                                Clase,
+                                Dominio,
+                                edad1,
+                                edad2,
+                                edad3,
+                                edad4,
+                                edad5,
+                                edad6,
+                                edad7,
+                                edad8,
+                                edad9)) 
+
+horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
+                                                         values_from = P6800, 
+                                                         names_prefix = "ht",
+                                                         values_fill = 0)
+
+
+horas_trabajadas_pivot <- subset(horas_trabajadas_pivot,
+                                 select = c(id,
+                                            Clase,
+                                            Dominio,
+                                            ht1,
+                                            ht2,
+                                            ht3,
+                                            ht4,
+                                            ht5,
+                                            ht6,
+                                            ht7,
+                                            ht8,
+                                            ht9))
+
+oficio_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
+                                               values_from = Oficio, 
+                                               names_prefix = "of",
+                                               values_fill = 0)
+
+oficio_pivot <- subset(oficio_pivot,
+                       select = c(id,
+                                  Clase,
+                                  Dominio,
+                                  of1,
+                                  of2,
+                                  of3,
+                                  of4,
+                                  of5,
+                                  of6,
+                                  of7,
+                                  of8,
+                                  of9))
+
+educ_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
+                                             values_from = P6210, 
+                                             names_prefix = "educ",
+                                             values_fill = 0)
+
+
+educ_pivot <- subset(educ_pivot,
+                     select = c(id,
+                                Clase,
+                                Dominio,
+                                educ1,
+                                educ2,
+                                educ3,
+                                educ4,
+                                educ5,
+                                educ6,
+                                educ7,
+                                educ8,
+                                educ9))
+
+#Como de cada tipo de persona pueden haber varios en el hogar, 
+#se agregan los casos por tipo de persona segun la función
+
+test_personas_colaps_edad <- edad_pivot %>% 
+  group_by(id) %>%
+  summarize(
+    edad_p1 = max (edad1,na.rm = TRUE), 
+    edad_p2 = max (edad2,na.rm = TRUE), 
+    edad_p3 = max (edad3,na.rm = TRUE), 
+    edad_p4 = max (edad4,na.rm = TRUE), 
+    edad_p5 = max (edad5,na.rm = TRUE), 
+    edad_p6 = max (edad6,na.rm = TRUE), 
+    edad_p7 = max (edad7,na.rm = TRUE), 
+    edad_p8 = max (edad8,na.rm = TRUE),
+    edad_p9 = max (edad9,na.rm = TRUE))
+
+test_personas_colaps_ht <- horas_trabajadas_pivot %>% 
+  group_by(id) %>%
+  summarize(
+    ht_p1 = mean (ht1,na.rm = TRUE), 
+    ht_p2 = mean (ht2,na.rm = TRUE), 
+    ht_p3 = mean (ht3,na.rm = TRUE), 
+    ht_p4 = mean (ht4,na.rm = TRUE), 
+    ht_p5 = mean (ht5,na.rm = TRUE), 
+    ht_p6 = mean (ht6,na.rm = TRUE), 
+    ht_p7 = mean (ht7,na.rm = TRUE), 
+    ht_p8 = mean (ht8,na.rm = TRUE),
+    ht_p9 = mean (ht9,na.rm = TRUE))
+
+test_personas_colaps_oficio <- oficio_pivot %>% 
+  group_by(id) %>%
+  summarize(
+    of_p1 = max (of1,na.rm = TRUE), 
+    of_p2 = max (of2,na.rm = TRUE), 
+    of_p3 = max (of3,na.rm = TRUE), 
+    of_p4 = max (of4,na.rm = TRUE), 
+    of_p5 = max (of5,na.rm = TRUE), 
+    of_p6 = max (of6,na.rm = TRUE), 
+    of_p7 = max (of7,na.rm = TRUE), 
+    of_p8 = max (of8,na.rm = TRUE),
+    of_p9 = max (of9,na.rm = TRUE))
+
+test_personas_colaps_educ <- educ_pivot %>% 
+  group_by(id) %>%
+  summarize(
+    educ_p1 = max (educ1,na.rm = TRUE), 
+    educ_p2 = max (educ2,na.rm = TRUE), 
+    educ_p3 = max (educ3,na.rm = TRUE), 
+    educ_p4 = max (educ4,na.rm = TRUE), 
+    educ_p5 = max (educ5,na.rm = TRUE), 
+    educ_p6 = max (educ6,na.rm = TRUE), 
+    educ_p7 = max (educ7,na.rm = TRUE), 
+    educ_p8 = max (educ8,na.rm = TRUE),
+    educ_p9 = max (educ9,na.rm = TRUE))
+
+#Nota, para revisar: ¿inner join vs left join?
+test_h0 <- 
+  inner_join(test_h0, test_personas_colaps_edad,
+             by = c("id"))
+
+test_h0 <- 
+  inner_join(test_h0, test_personas_colaps_ht,
+             by = c("id"))
+
+test_h0 <- 
+  inner_join(test_h0, test_personas_colaps_oficio,
+             by = c("id"))
+
+test_h0 <- 
+  inner_join(test_h0, test_personas_colaps_educ,
+             by = c("id"))
+
+#Creación de otras variables
+
+test_personas_jf <- test_personas %>% mutate(
+  mujer_jf_h = if_else(P6020==2 & P6050==1, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_10_18_h = if_else(P6050==1 & P6040>=10 & P6040<=18, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_19_28_h = if_else(P6050==1 & P6040>=19 & P6040<=28, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_29_59_h = if_else(P6050==1 & P6040>=29 & P6040<=59, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_60_h = if_else(P6050==1 & P6040>=60, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>%
+  group_by(id) %>%
+  summarise(
+    mujer_jf_h = max(mujer_jf_h),
+    jf_10_18_h = max(jf_10_18_h),
+    jf_19_28_h = max(jf_19_28_h),
+    jf_29_59_h = max(jf_29_59_h),
+    jf_60_h = max(jf_60_h),
+  )
+
+
+test_h0 <- 
+  inner_join(test_h0, test_personas_jf,
+             by = c("id"))
+
+
+#3.2. Identificar NAs base test_h ---- 
+
+test_h <- test_h0
+cantidad_na <- sapply(test_h, function(x) sum(is.na(x)))
+cantidad_na <- data.frame(cantidad_na)
+porcentaje_na <- cantidad_na/nrow(test_h)
+
+# Porcentaje de observaciones faltantes. 
+p <- mean(porcentaje_na[,1])
+print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
+#En promedio el 3.54% de las entradas están vacías"
+
+#Se visualiza el porcentaje de observaciones faltantes por variable
+
+# se ordena de mayor a menor
+porcentaje_na <- arrange(porcentaje_na, desc(cantidad_na))
+
+# se convierte el nombre de la fila en columna
+porcentaje_na <- rownames_to_column(porcentaje_na, "variable")
+
+# # se quitan las variables que no tienen NAs
+filtro <- porcentaje_na$cantidad_na == 0
+variables_sin_na <- porcentaje_na[filtro, "variable"]
+variables_sin_na <- paste(variables_sin_na, collapse = ", ")
+print(paste("Las variables sin NAs son:", variables_sin_na))
+# 
+porcentaje_na <- porcentaje_na[!filtro,]
+# 
+orden <- porcentaje_na$variable[length(porcentaje_na$variable):1]
+
+porcentaje_na$variable <- factor(porcentaje_na$variable,
+                                 levels = orden)
+
+
+# Se grafica el % de NA de las diferentes variables de interés
+ggplot(porcentaje_na[1:nrow(porcentaje_na),], 
+       aes(y = variable, x = cantidad_na)) +
+  geom_bar(stat = "identity", fill = "darkblue") +
+  geom_text(aes(label = paste0(round(100*cantidad_na, 1), "%")),
+            colour = "white", position = "dodge", hjust = 1.3,
+            size = 2, fontface = "bold") +
+  theme_classic() +
+  labs(x = "Porcentaje de NAs", y = "Variables") +
+  scale_x_continuous(labels = scales::percent, limits = c(0, 1))
+
+# Prueba borrado manual--- ajustar o borrar
+vars_drop <- c("P5100", "P5140", "P5130")
+test_h_si <- test_h[,!(names(test_h) %in% vars_drop)]
+k0 <- ncol(test_h)
+k1 <- ncol(test_h_si)
+print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
+
+#se crea test hogares borrando las filas de ht_p1 que están con NA
+
+test_h_si <- test_h_si %>% filter(!is.na(ht_p1))#pasa de 66168 a 62772 obs
+
+#3.3. Convertir en factor variables de base test ---- 
+
+test_h_si$P5000 <- as.factor(test_h_si$P5000)
+test_h_si$P5010 <- as.factor(test_h_si$P5010)
+test_h_si$Depto <- as.factor(test_h_si$Depto)
+
+test_h_si$of_p1 <- as.factor(test_h_si$of_p1)
+test_h_si$of_p2 <- as.factor(test_h_si$of_p2)
+test_h_si$of_p3 <- as.factor(test_h_si$of_p3)
+test_h_si$of_p4 <- as.factor(test_h_si$of_p4)
+test_h_si$of_p5 <- as.factor(test_h_si$of_p5)
+test_h_si$of_p6 <- as.factor(test_h_si$of_p6)
+test_h_si$of_p7 <- as.factor(test_h_si$of_p7)
+test_h_si$of_p8 <- as.factor(test_h_si$of_p8)
+test_h_si$of_p9 <- as.factor(test_h_si$of_p9)
+
+test_h_si$educ_p1 <- as.factor(test_h_si$educ_p1)
+test_h_si$educ_p2 <- as.factor(test_h_si$educ_p2)
+test_h_si$educ_p3 <- as.factor(test_h_si$educ_p3)
+test_h_si$educ_p4 <- as.factor(test_h_si$educ_p4)
+test_h_si$educ_p5 <- as.factor(test_h_si$educ_p5)
+test_h_si$educ_p6 <- as.factor(test_h_si$educ_p6)
+test_h_si$educ_p7 <- as.factor(test_h_si$educ_p7)
+test_h_si$educ_p8 <- as.factor(test_h_si$educ_p8)
+test_h_si$educ_p9 <- as.factor(test_h_si$educ_p9)
+
+test_h_si$mujer_jf_h <- as.factor(test_h_si$mujer_jf_h)
+test_h_si$jf_10_18_h <- as.factor(test_h_si$jf_10_18_h)
+test_h_si$jf_19_28_h <- as.factor(test_h_si$jf_19_28_h)
+test_h_si$jf_29_59_h <- as.factor(test_h_si$jf_29_59_h)
+test_h_si$jf_60_h <- as.factor(test_h_si$jf_60_h)
+
+#3.4. Guardar la base test ----   
+
+#Se guarda la base de datos en un archivo .rds
+setwd("~/GitHub/MECA_BD_PS2")
+saveRDS(test_h_si,"./stores/test_h_si.rds")
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 4. MODELOS DE CLASIFICACIÓN DE POBREZA----
