@@ -256,7 +256,6 @@ train_personas_colaps_oficio <- oficio_pivot %>%
     of_p8 = max (of8,na.rm = TRUE),
     of_p9 = max (of9,na.rm = TRUE))
 
-
 train_personas_colaps_educ <- educ_pivot %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
@@ -270,8 +269,6 @@ train_personas_colaps_educ <- educ_pivot %>%
     educ_p8 = max (educ8,na.rm = TRUE),
     educ_p9 = max (educ9,na.rm = TRUE))
 
-
-
 #Nota, para revisar: ¿inner join vs left join?
 train_h0 <- 
   inner_join(train_h0, train_personas_colaps_edad,
@@ -279,6 +276,10 @@ train_h0 <-
 
 train_h0 <- 
   inner_join(train_h0, train_personas_colaps_ht,
+             by = c("id","Clase","Dominio"))
+
+train_h0 <- 
+  inner_join(train_h0, train_personas_colaps_oficio,
              by = c("id","Clase","Dominio"))
 
 train_h0 <- 
@@ -333,7 +334,7 @@ porcentaje_na <- cantidad_na/nrow(train_h)
 # Porcentaje de observaciones faltantes. 
 p <- mean(porcentaje_na[,1])
 print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 4.2% de las entradas están vacías"
+#En promedio el 3.06% de las entradas están vacías"
 
 #Se visualiza el porcentaje de observaciones faltantes por variable
 
@@ -377,7 +378,7 @@ print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "colu
 
 #se crea train hogares borrando las filas de ht_p1 que están con NA
 
-train_h_si <- train_h_si %>% filter(!is.na(ht_p1))
+train_h_si <- train_h_si %>% filter(!is.na(ht_p1))#pasa de 164960 a 156568 obs
 
 #2.3. Convertir en factor variables de base train ---- 
 
@@ -404,7 +405,6 @@ train_h_si$educ_p6 <- as.factor(train_h_si$educ_p6)
 train_h_si$educ_p7 <- as.factor(train_h_si$educ_p7)
 train_h_si$educ_p8 <- as.factor(train_h_si$educ_p8)
 train_h_si$educ_p9 <- as.factor(train_h_si$educ_p9)
-
 
 train_h_si$mujer_jf_h <- as.factor(train_h_si$mujer_jf_h)
 train_h_si$jf_10_18_h <- as.factor(train_h_si$jf_10_18_h)
