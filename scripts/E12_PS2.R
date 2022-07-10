@@ -100,16 +100,118 @@ summary(comparedf(train_personas,test_personas))
 
 #1.3. Definición base train----
 
-#Prueba pivot
-train_h0 <- train_hogares
 
-df_train_pivot <-  train_personas %>% pivot_wider(names_from = P6050, 
-                                                  values_from = P6040, 
-                                                  names_prefix = "edad",
+#Se crea un subconjunto con las variables de interés
+#Se hace un primer filtro dejando en la base train las variables que están en el test de hogares
+train_h0 <- subset(train_hogares,
+                       select=c(id,
+                                Clase,
+                                Dominio,
+                                factor(P5000),#Incluyendo sala-comedor ¿de cuántos cuartos en total dispone este hogar? 
+                                factor(P5010),#¿En cuántos de esos cuartos duermen las personas de este hogar? 
+                                factor(P5090),#vivienda propia
+                                P5100,
+                                P5130,
+                                P5140,
+                                Nper,#Número de personas en el hogar
+                                Npersug,#Número de personas en la unidad de gasto
+                                Li,#Pobreza Extrema (Línea de indigencia)
+                                Lp,#línea de Pobreza
+                                Fex_c,
+                                factor(Depto),#Departamento
+                                factor(Fex_dpto)))#Factor de expasión departamental
+
+
+
+#Resumen de variables
+summary(train_personas$P6800)#Horas trabajadas NAs 294901 
+summary(train_personas$Pet)#Población en edad de trabajar- NAs 95438
+summary(train_personas$P6210)#Nivel educativo - NAs 22685
+summary(train_personas$P6020)#Sexo 1 hombre 2 mujer 
+summary(train_personas$P6050)#Parentezco con el jefe de hogar
+summary(train_personas$P6040)#Edad
+summary(train_personas$Oficio)#oficio
+
+
+edad_pivot <- train_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
+                                              values_from = P6040,#edad 
+                                             names_prefix = "edad",
+                                              values_fill = 0)
+
+edad_pivot <- subset(edad_pivot,
+       select = c(id,
+                  Clase,
+                  Dominio,
+                  edad1,
+                  edad2,
+                  edad3,
+                  edad4,
+                  edad5,
+                  edad6,
+                  edad7,
+                  edad8,
+                  edad9)) 
+
+horas_trabajadas_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
+                                                        values_from = P6800, 
+                                                       names_prefix = "ht",
+                                                        values_fill = 0)
+
+
+horas_trabajadas_pivot <- subset(horas_trabajadas_pivot,
+        select = c(id,
+                  Clase,
+                  Dominio,
+                  ht1,
+                  ht2,
+                  ht3,
+                  ht4,
+                  ht5,
+                  ht6,
+                  ht7,
+                  ht8,
+                  ht9))
+
+oficio_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
+                                              values_from = Oficio, 
+                                             names_prefix = "of",
+                                              values_fill = 0)
+
+oficio_pivot <- subset(oficio_pivot,
+       select = c(id,
+                  Clase,
+                  Dominio,
+                  of1,
+                  of2,
+                  of3,
+                  of4,
+                  of5,
+                  of6,
+                  of7,
+                  of8,
+                  of9))
+
+educ_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
+                                                  values_from = P6210, 
+                                                  names_prefix = "educ",
                                                   values_fill = 0)
 
 
-train_personas_colaps <- df_train_pivot %>% 
+educ_pivot <- subset(educ_pivot,
+       select = c(id,
+                  Clase,
+                  Dominio,
+                  educ1,
+                  educ2,
+                  educ3,
+                  educ4,
+                  educ5,
+                  educ6,
+                  educ7,
+                  educ8,
+                  educ9))
+
+train_personas_colaps <- edad_pivot %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
     edad_p1 = sum (edad1,na.rm = TRUE), 
@@ -121,6 +223,42 @@ train_personas_colaps <- df_train_pivot %>%
     edad_p7 = sum (edad1,na.rm = TRUE), 
     edad_p8 = sum (edad1,na.rm = TRUE),
     edad_p9 = sum (edad1,na.rm = TRUE))
+
+train_personas_colaps <- horas_trabajadas_pivot %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(
+    ht_p1 = sum (ht1,na.rm = TRUE), 
+    ht_p2 = sum (ht2,na.rm = TRUE), 
+    ht_p3 = sum (ht3,na.rm = TRUE), 
+    ht_p4 = sum (ht4,na.rm = TRUE), 
+    ht_p5 = sum (ht5,na.rm = TRUE), 
+    ht_p6 = sum (ht6,na.rm = TRUE), 
+    ht_p7 = sum (ht7,na.rm = TRUE), 
+    ht_p8 = sum (ht8,na.rm = TRUE),
+    ht_p9 = sum (ht9,na.rm = TRUE))
+
+train_personas_colaps <- educ_pivot %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(
+    educ_p1 = sum (educ1,na.rm = TRUE), 
+    educ_p2 = sum (educ2,na.rm = TRUE), 
+    educ_p3 = sum (educ3,na.rm = TRUE), 
+    educ_p4 = sum (educ4,na.rm = TRUE), 
+    educ_p5 = sum (educ5,na.rm = TRUE), 
+    educ_p6 = sum (educ6,na.rm = TRUE), 
+    educ_p7 = sum (educ7,na.rm = TRUE), 
+    educ_p8 = sum (educ8,na.rm = TRUE),
+    educ_p9 = sum (educ9,na.rm = TRUE))
+
+
+
+#Nota, para revisar: ¿inner join vs left join?
+train_h0 <- 
+  inner_join(train_h0, train_personas_colaps,
+             by = c("id","Clase","Dominio"))
+
+
+
     
 train_personas_colaps <- train_personas %>% 
   group_by(id,Clase,Dominio) %>%
@@ -134,22 +272,13 @@ train_personas_colaps <- train_personas %>%
     jf_60_h = if_else(any(P6050==1 && P6040<=60), 1, 0) ) #Se crea la var jefe de hogar mayores de 60 años
 
 
-#Nota, para revisar: ¿inner join vs left join?
-train_h0 <- 
-  inner_join(train_h0, train_personas_colaps,
-             by = c("id","Clase","Dominio"))
+
 
 
 #Se define la base de datos train_h
 train_h <- train_hogares
 
-#Resumen de variables
-summary(train_personas$P6800)#Horas trabajadas NAs 294901 
-summary(train_personas$Pet)#Población en edad de trabajar- NAs 95438
-summary(train_personas$P6210)#Nivel educativo - NAs 22685
-summary(train_personas$P6020)#Sexo 1 hombre 2 mujer 
-summary(train_personas$P6050)#Parentezco con el jefe de hogar
-summary(train_personas$P6040)#Edad
+
 
 train_personas_colaps <- train_personas %>% 
   group_by(id,Clase,Dominio) %>%
