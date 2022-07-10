@@ -134,6 +134,8 @@ summary(train_personas$Pet)#Población en edad de trabajar- NAs 95438
 summary(train_personas$P6210)#Nivel educativo - NAs 22685
 summary(train_personas$P6020)#Sexo 1 hombre 2 mujer 
 summary(train_personas$P6050)#Parentezco con el jefe de hogar
+summary(train_personas$P6090)#Es beneficiario de alguna entidad social en salud Nas 95438
+summary(train_personas$P6100)#Regimenes de seguridad social en salud #126064
 summary(train_personas$P6040)#Edad
 summary(train_personas$Oficio)#oficio
 
@@ -272,22 +274,22 @@ train_personas_colaps_educ <- educ_pivot %>%
     educ_p8 = max (educ8,na.rm = TRUE),
     educ_p9 = max (educ9,na.rm = TRUE))
 
-#Nota, para revisar: ¿inner join vs left join?
+#Join
 train_h0 <- 
   inner_join(train_h0, train_personas_colaps_edad,
-             by = c("id","Clase","Dominio"))
+             by = c("id"))
 
 train_h0 <- 
   inner_join(train_h0, train_personas_colaps_ht,
-             by = c("id","Clase","Dominio"))
+             by = c("id"))
 
 train_h0 <- 
   inner_join(train_h0, train_personas_colaps_oficio,
-             by = c("id","Clase","Dominio"))
+             by = c("id"))
 
 train_h0 <- 
   inner_join(train_h0, train_personas_colaps_educ,
-             by = c("id","Clase","Dominio"))
+             by = c("id"))
 
 #Creación de otras variables
 
@@ -328,6 +330,7 @@ train_personas_jf <- train_personas_jf %>%
     jf_29_59_h = max(jf_29_59_h),
     jf_60_h = max(jf_60_h),
     jf_sub = max(jf_sub),
+    jf_afiliado = max(jf_afiliado)
   )
 
 
@@ -382,7 +385,7 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
   scale_x_continuous(labels = scales::percent, limits = c(0, 1))
 
 # Prueba borrado manual--- ajustar o borrar
-vars_drop <- c("P5100", "P5140", "P5130")
+vars_drop <- c("P5100", "P5140", "P5130", "jf_afiliado")
 train_h_si <- train_h[,!(names(train_h) %in% vars_drop)]
 k0 <- ncol(train_h)
 k1 <- ncol(train_h_si)
@@ -390,7 +393,7 @@ print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "colu
 
 #se crea train hogares borrando las filas de ht_p1 que están con NA
 
-train_h_si <- train_h_si %>% filter(!is.na(ht_p1))#pasa de 164960 a 156568 obs
+train_h_si <- train_h_si %>% filter(!is.na(jf_sub))#pasa de 164960 a 155089 obs
 
 #2.3. Convertir en factor variables de base train ---- 
 
@@ -483,6 +486,8 @@ summary(test_personas$P6020)#Sexo 1 hombre 2 mujer
 summary(test_personas$P6050)#Parentezco con el jefe de hogar
 summary(test_personas$P6040)#Edad
 summary(test_personas$Oficio)#oficio
+summary(test_personas$P6090)#Es beneficiario de alguna entidad social en salud Nas 119837
+summary(test_personas$P6100)#Regimenes de seguridad social en salud #126064
 
 #Se hace un pivot de variables del test personas
 
@@ -491,8 +496,8 @@ edad_pivot <- test_personas %>%  pivot_wider (names_from = P6050,#Parentezco con
                                                names_prefix = "edad",
                                                values_fill = 0)
 
-edad_pivot <- subset(edad_pivot,
-                     select = c(id,
+edad_pivot <- select (edad_pivot,
+                                id,
                                 Clase,
                                 Dominio,
                                 edad1,
@@ -503,7 +508,7 @@ edad_pivot <- subset(edad_pivot,
                                 edad6,
                                 edad7,
                                 edad8,
-                                edad9)) 
+                                edad9)
 
 horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
                                                          values_from = P6800, 
@@ -511,8 +516,8 @@ horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050,
                                                          values_fill = 0)
 
 
-horas_trabajadas_pivot <- subset(horas_trabajadas_pivot,
-                                 select = c(id,
+horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
+                                            id,
                                             Clase,
                                             Dominio,
                                             ht1,
@@ -523,15 +528,15 @@ horas_trabajadas_pivot <- subset(horas_trabajadas_pivot,
                                             ht6,
                                             ht7,
                                             ht8,
-                                            ht9))
+                                            ht9)
 
 oficio_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
                                                values_from = Oficio, 
                                                names_prefix = "of",
                                                values_fill = 0)
 
-oficio_pivot <- subset(oficio_pivot,
-                       select = c(id,
+oficio_pivot <- select (oficio_pivot,
+                                  id,
                                   Clase,
                                   Dominio,
                                   of1,
@@ -542,7 +547,7 @@ oficio_pivot <- subset(oficio_pivot,
                                   of6,
                                   of7,
                                   of8,
-                                  of9))
+                                  of9)
 
 educ_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
                                              values_from = P6210, 
@@ -550,8 +555,8 @@ educ_pivot <- test_personas %>% pivot_wider(names_from = P6050,
                                              values_fill = 0)
 
 
-educ_pivot <- subset(educ_pivot,
-                     select = c(id,
+educ_pivot <- select (educ_pivot,
+                                id,
                                 Clase,
                                 Dominio,
                                 educ1,
@@ -562,7 +567,7 @@ educ_pivot <- subset(educ_pivot,
                                 educ6,
                                 educ7,
                                 educ8,
-                                educ9))
+                                educ9)
 
 #Como de cada tipo de persona pueden haber varios en el hogar, 
 #se agregan los casos por tipo de persona segun la función
@@ -583,15 +588,15 @@ test_personas_colaps_edad <- edad_pivot %>%
 test_personas_colaps_ht <- horas_trabajadas_pivot %>% 
   group_by(id) %>%
   summarize(
-    ht_p1 = mean (ht1,na.rm = TRUE), 
-    ht_p2 = mean (ht2,na.rm = TRUE), 
-    ht_p3 = mean (ht3,na.rm = TRUE), 
-    ht_p4 = mean (ht4,na.rm = TRUE), 
-    ht_p5 = mean (ht5,na.rm = TRUE), 
-    ht_p6 = mean (ht6,na.rm = TRUE), 
-    ht_p7 = mean (ht7,na.rm = TRUE), 
-    ht_p8 = mean (ht8,na.rm = TRUE),
-    ht_p9 = mean (ht9,na.rm = TRUE))
+    ht_p1 = max (ht1,na.rm = TRUE), 
+    ht_p2 = max (ht2,na.rm = TRUE), 
+    ht_p3 = max (ht3,na.rm = TRUE), 
+    ht_p4 = max (ht4,na.rm = TRUE), 
+    ht_p5 = max (ht5,na.rm = TRUE), 
+    ht_p6 = max (ht6,na.rm = TRUE), 
+    ht_p7 = max (ht7,na.rm = TRUE), 
+    ht_p8 = max (ht8,na.rm = TRUE),
+    ht_p9 = max (ht9,na.rm = TRUE))
 
 test_personas_colaps_oficio <- oficio_pivot %>% 
   group_by(id) %>%
@@ -657,6 +662,13 @@ test_personas_jf <- test_personas_jf %>% mutate(
 test_personas_jf <- test_personas_jf %>% mutate(
   jf_60_h = if_else(P6050==1 & P6040>=60, 1, 0)
 )
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_sub = if_else(P6050==1 & P6100==3, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_afiliado = if_else(P6050==1 & P6090==2 | P6090==3, 1, 0)
+)
 
 test_personas_jf <- test_personas_jf %>%
   group_by(id) %>%
@@ -666,6 +678,8 @@ test_personas_jf <- test_personas_jf %>%
     jf_19_28_h = max(jf_19_28_h),
     jf_29_59_h = max(jf_29_59_h),
     jf_60_h = max(jf_60_h),
+    jf_sub = max(jf_sub),
+    jf_afiliado = max(jf_afiliado)
   )
 
 
@@ -684,7 +698,7 @@ porcentaje_na <- cantidad_na/nrow(test_h)
 # Porcentaje de observaciones faltantes. 
 p <- mean(porcentaje_na[,1])
 print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 3.54% de las entradas están vacías"
+#En promedio el 4.17% de las entradas están vacías"
 
 #Se visualiza el porcentaje de observaciones faltantes por variable
 
@@ -720,7 +734,7 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
   scale_x_continuous(labels = scales::percent, limits = c(0, 1))
 
 # Prueba borrado manual--- ajustar o borrar
-vars_drop <- c("P5100", "P5140", "P5130")
+vars_drop <- c("P5100", "P5140", "P5130", "jf_afiliado")
 test_h_si <- test_h[,!(names(test_h) %in% vars_drop)]
 k0 <- ncol(test_h)
 k1 <- ncol(test_h_si)
@@ -728,12 +742,13 @@ print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "colu
 
 #se crea test hogares borrando las filas de ht_p1 que están con NA
 
-test_h_si <- test_h_si %>% filter(!is.na(ht_p1))#pasa de 66168 a 62772 obs
+test_h_si <- test_h_si %>% filter(!is.na(jf_sub))#pasa de 66168 a 62479 obs
 
 #3.3. Convertir en factor variables de base test ---- 
 
 test_h_si$P5000 <- as.factor(test_h_si$P5000)
 test_h_si$P5010 <- as.factor(test_h_si$P5010)
+test_h_si$P5090 <- as.factor(test_h_si$P5090)
 test_h_si$Depto <- as.factor(test_h_si$Depto)
 
 test_h_si$of_p1 <- as.factor(test_h_si$of_p1)
@@ -761,6 +776,7 @@ test_h_si$jf_10_18_h <- as.factor(test_h_si$jf_10_18_h)
 test_h_si$jf_19_28_h <- as.factor(test_h_si$jf_19_28_h)
 test_h_si$jf_29_59_h <- as.factor(test_h_si$jf_29_59_h)
 test_h_si$jf_60_h <- as.factor(test_h_si$jf_60_h)
+test_h_si$jf_sub <- as.factor(test_h_si$jf_sub)
 
 #3.4. Guardar la base test ----   
 
