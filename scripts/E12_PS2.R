@@ -106,9 +106,12 @@ summary(comparedf(train_personas,test_personas))
 #2.1. Primera definición base train----
 
 #Se hace un primer filtro dejando en la base train las variables que están en el test de hogares
+#Se dejan 2 variables de trian hogares que no están en tres hogares Pobre e Ingtotug
 train_h0 <- select(train_hogares,id,
                                 Clase,
                                 Dominio,
+                                Pobre,
+                                Ingtotug,
                                 P5000,#Incluyendo sala-comedor ¿de cuántos cuartos en total dispone este hogar? 
                                 P5010,#¿En cuántos de esos cuartos duermen las personas de este hogar? 
                                 P5090,#vivienda propia
@@ -141,8 +144,8 @@ edad_pivot <- train_personas %>%  pivot_wider (names_from = P6050,#Parentezco co
                                              names_prefix = "edad",
                                               values_fill = 0)
 
-edad_pivot <- subset(edad_pivot,
-       select = c(id,
+edad_pivot <- select(edad_pivot,
+                  id,
                   Clase,
                   Dominio,
                   edad1,
@@ -153,7 +156,7 @@ edad_pivot <- subset(edad_pivot,
                   edad6,
                   edad7,
                   edad8,
-                  edad9)) 
+                  edad9) 
 
 horas_trabajadas_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
                                                         values_from = P6800, 
@@ -161,8 +164,8 @@ horas_trabajadas_pivot <- train_personas %>% pivot_wider(names_from = P6050,
                                                         values_fill = 0)
 
 
-horas_trabajadas_pivot <- subset(horas_trabajadas_pivot,
-        select = c(id,
+horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
+                  id,
                   Clase,
                   Dominio,
                   ht1,
@@ -173,15 +176,15 @@ horas_trabajadas_pivot <- subset(horas_trabajadas_pivot,
                   ht6,
                   ht7,
                   ht8,
-                  ht9))
+                  ht9)
 
 oficio_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
                                               values_from = Oficio, 
                                              names_prefix = "of",
                                               values_fill = 0)
 
-oficio_pivot <- subset(oficio_pivot,
-       select = c(id,
+oficio_pivot <- select (oficio_pivot,
+                  id,
                   Clase,
                   Dominio,
                   of1,
@@ -192,7 +195,7 @@ oficio_pivot <- subset(oficio_pivot,
                   of6,
                   of7,
                   of8,
-                  of9))
+                  of9)
 
 educ_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
                                                   values_from = P6210, 
@@ -200,8 +203,8 @@ educ_pivot <- train_personas %>% pivot_wider(names_from = P6050,
                                                   values_fill = 0)
 
 
-educ_pivot <- subset(educ_pivot,
-       select = c(id,
+educ_pivot <- select (educ_pivot,
+                  id,
                   Clase,
                   Dominio,
                   educ1,
@@ -212,7 +215,7 @@ educ_pivot <- subset(educ_pivot,
                   educ6,
                   educ7,
                   educ8,
-                  educ9))
+                  educ9)
 
 #Como de cada tipo de persona pueden haber varios en el hogar, 
 #se agregan los casos por tipo de persona segun la función
@@ -233,15 +236,15 @@ train_personas_colaps_edad <- edad_pivot %>%
 train_personas_colaps_ht <- horas_trabajadas_pivot %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
-    ht_p1 = mean (ht1,na.rm = TRUE), 
-    ht_p2 = mean (ht2,na.rm = TRUE), 
-    ht_p3 = mean (ht3,na.rm = TRUE), 
-    ht_p4 = mean (ht4,na.rm = TRUE), 
-    ht_p5 = mean (ht5,na.rm = TRUE), 
-    ht_p6 = mean (ht6,na.rm = TRUE), 
-    ht_p7 = mean (ht7,na.rm = TRUE), 
-    ht_p8 = mean (ht8,na.rm = TRUE),
-    ht_p9 = mean (ht9,na.rm = TRUE))
+    ht_p1 = max (ht1,na.rm = TRUE), 
+    ht_p2 = max (ht2,na.rm = TRUE), 
+    ht_p3 = max (ht3,na.rm = TRUE), 
+    ht_p4 = max (ht4,na.rm = TRUE), 
+    ht_p5 = max (ht5,na.rm = TRUE), 
+    ht_p6 = max (ht6,na.rm = TRUE), 
+    ht_p7 = max (ht7,na.rm = TRUE), 
+    ht_p8 = max (ht8,na.rm = TRUE),
+    ht_p9 = max (ht9,na.rm = TRUE))
 
 train_personas_colaps_oficio <- oficio_pivot %>% 
   group_by(id,Clase,Dominio) %>%
@@ -308,6 +311,14 @@ train_personas_jf <- train_personas_jf %>% mutate(
   jf_60_h = if_else(P6050==1 & P6040>=60, 1, 0)
 )
 
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_sub = if_else(P6050==1 & P6100==3, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_afiliado = if_else(P6050==1 & P6090==2 | P6090==3, 1, 0)
+)
+
 train_personas_jf <- train_personas_jf %>%
   group_by(id) %>%
   summarise(
@@ -316,6 +327,7 @@ train_personas_jf <- train_personas_jf %>%
     jf_19_28_h = max(jf_19_28_h),
     jf_29_59_h = max(jf_29_59_h),
     jf_60_h = max(jf_60_h),
+    jf_sub = max(jf_sub),
   )
 
 
@@ -384,6 +396,7 @@ train_h_si <- train_h_si %>% filter(!is.na(ht_p1))#pasa de 164960 a 156568 obs
 
 train_h_si$P5000 <- as.factor(train_h_si$P5000)
 train_h_si$P5010 <- as.factor(train_h_si$P5010)
+train_h_si$P5090 <- as.factor(train_h_si$P5090)
 train_h_si$Depto <- as.factor(train_h_si$Depto)
 
 train_h_si$of_p1 <- as.factor(train_h_si$of_p1)
@@ -411,6 +424,7 @@ train_h_si$jf_10_18_h <- as.factor(train_h_si$jf_10_18_h)
 train_h_si$jf_19_28_h <- as.factor(train_h_si$jf_19_28_h)
 train_h_si$jf_29_59_h <- as.factor(train_h_si$jf_29_59_h)
 train_h_si$jf_60_h <- as.factor(train_h_si$jf_60_h)
+train_h_si$jf_sub <- as.factor(train_h_si$jf_sub)
 
 #2.4. Guardar la base train ----   
 
@@ -421,14 +435,11 @@ saveRDS(train_h_si,"./stores/train_h_si.rds")
 
 #2.5. Tablas descriptivas ---- 
 
-#Se usa la librería "CreateTableOne" para crear una tabla con todas las variables
+install.packages("gtsummary")
+require ("gtsummary") #buen paquete para tablas descriptivas
 
-#Tabla_descr <- CreateTableOne(data = train_h)
-#Tabla_descr
-#print(Tabla_descr,showAllLevels = TRUE)
-#summary(Tabla_descr)
-#Tabla_descr_csv <- print(Tabla_descr, exact = "stage", quote = FALSE, noSpaces = TRUE, printToggle = FALSE)
-#capture.output(Tabla_descr, file="Tabla_descr.doc")
+tbl_summary(train_h_si)
+
 
 ## Save to a CSV file
 #setwd("~/GitHub/MECA_BD_PS2")
@@ -453,6 +464,8 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 #prueba 3 de gráfica
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 3. PREPARACIÓN DE LA BASE DE DATOS TEST Y ESTADÍSTICAS DESCRIPTIVAS----
