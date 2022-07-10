@@ -7,7 +7,7 @@
 #Ingrid Lorena Molano
 #Camilo Villa Moreno
 
-#Julio 10, 2022
+#Julio 12, 2022
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 0. PRELIMINARES: PREPARACIÓN ESPACIO DE TRABAJO Y LIBRERÍAS----
@@ -45,7 +45,7 @@ p_load(rio,
        stargazer)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
+# 1. CARGUE DE LAS BASES DE DATOS Y EXPLORACIÓN INICIAL----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #1.1. Cargue de las bases de datos ---- 
@@ -98,18 +98,20 @@ summary(comparedf(train_personas,test_personas))
 
 
 
-#1.3. Definición base train----
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# 2. PREPARACIÓN DE LA BASE DE DATOS TRAIN Y ESTADÍSTICAS DESCRIPTIVAS----
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#Se crea un subconjunto con las variables de interés
+#2.1. Primera definición base train----
+
 #Se hace un primer filtro dejando en la base train las variables que están en el test de hogares
-train_h0 <- subset(train_hogares,
-                       select=c(id,
+train_h0 <- select(train_hogares,id,
                                 Clase,
                                 Dominio,
-                                factor(P5000),#Incluyendo sala-comedor ¿de cuántos cuartos en total dispone este hogar? 
-                                factor(P5010),#¿En cuántos de esos cuartos duermen las personas de este hogar? 
-                                factor(P5090),#vivienda propia
+                                P5000,#Incluyendo sala-comedor ¿de cuántos cuartos en total dispone este hogar? 
+                                P5010,#¿En cuántos de esos cuartos duermen las personas de este hogar? 
+                                P5090,#vivienda propia
                                 P5100,
                                 P5130,
                                 P5140,
@@ -118,12 +120,12 @@ train_h0 <- subset(train_hogares,
                                 Li,#Pobreza Extrema (Línea de indigencia)
                                 Lp,#línea de Pobreza
                                 Fex_c,
-                                factor(Depto),#Departamento
-                                factor(Fex_dpto)))#Factor de expasión departamental
+                                Depto,#Departamento
+                                Fex_dpto)#Factor de expasión departamental
 
 
 
-#Resumen de variables
+#Resumen de variables del train personas
 summary(train_personas$P6800)#Horas trabajadas NAs 294901 
 summary(train_personas$Pet)#Población en edad de trabajar- NAs 95438
 summary(train_personas$P6210)#Nivel educativo - NAs 22685
@@ -132,6 +134,7 @@ summary(train_personas$P6050)#Parentezco con el jefe de hogar
 summary(train_personas$P6040)#Edad
 summary(train_personas$Oficio)#oficio
 
+#Se hace un pivot de variables del train personas
 
 edad_pivot <- train_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
                                               values_from = P6040,#edad 
@@ -211,52 +214,78 @@ educ_pivot <- subset(educ_pivot,
                   educ8,
                   educ9))
 
-train_personas_colaps <- edad_pivot %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(
-    edad_p1 = sum (edad1,na.rm = TRUE), 
-    edad_p2 = sum (edad1,na.rm = TRUE), 
-    edad_p3 = sum (edad1,na.rm = TRUE), 
-    edad_p4 = sum (edad1,na.rm = TRUE), 
-    edad_p5 = sum (edad1,na.rm = TRUE), 
-    edad_p6 = sum (edad1,na.rm = TRUE), 
-    edad_p7 = sum (edad1,na.rm = TRUE), 
-    edad_p8 = sum (edad1,na.rm = TRUE),
-    edad_p9 = sum (edad1,na.rm = TRUE))
+#Como de cada tipo de persona pueden haber varios en el hogar, 
+#se agregan los casos por tipo de persona segun la función
 
-train_personas_colaps <- horas_trabajadas_pivot %>% 
+train_personas_colaps_edad <- edad_pivot %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
-    ht_p1 = sum (ht1,na.rm = TRUE), 
-    ht_p2 = sum (ht2,na.rm = TRUE), 
-    ht_p3 = sum (ht3,na.rm = TRUE), 
-    ht_p4 = sum (ht4,na.rm = TRUE), 
-    ht_p5 = sum (ht5,na.rm = TRUE), 
-    ht_p6 = sum (ht6,na.rm = TRUE), 
-    ht_p7 = sum (ht7,na.rm = TRUE), 
-    ht_p8 = sum (ht8,na.rm = TRUE),
-    ht_p9 = sum (ht9,na.rm = TRUE))
+    edad_p1 = max (edad1,na.rm = TRUE), 
+    edad_p2 = max (edad2,na.rm = TRUE), 
+    edad_p3 = max (edad3,na.rm = TRUE), 
+    edad_p4 = max (edad4,na.rm = TRUE), 
+    edad_p5 = max (edad5,na.rm = TRUE), 
+    edad_p6 = max (edad6,na.rm = TRUE), 
+    edad_p7 = max (edad7,na.rm = TRUE), 
+    edad_p8 = max (edad8,na.rm = TRUE),
+    edad_p9 = max (edad9,na.rm = TRUE))
 
-train_personas_colaps <- educ_pivot %>% 
+train_personas_colaps_ht <- horas_trabajadas_pivot %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(
-    educ_p1 = sum (educ1,na.rm = TRUE), 
-    educ_p2 = sum (educ2,na.rm = TRUE), 
-    educ_p3 = sum (educ3,na.rm = TRUE), 
-    educ_p4 = sum (educ4,na.rm = TRUE), 
-    educ_p5 = sum (educ5,na.rm = TRUE), 
-    educ_p6 = sum (educ6,na.rm = TRUE), 
-    educ_p7 = sum (educ7,na.rm = TRUE), 
-    educ_p8 = sum (educ8,na.rm = TRUE),
-    educ_p9 = sum (educ9,na.rm = TRUE))
+    ht_p1 = mean (ht1,na.rm = TRUE), 
+    ht_p2 = mean (ht2,na.rm = TRUE), 
+    ht_p3 = mean (ht3,na.rm = TRUE), 
+    ht_p4 = mean (ht4,na.rm = TRUE), 
+    ht_p5 = mean (ht5,na.rm = TRUE), 
+    ht_p6 = mean (ht6,na.rm = TRUE), 
+    ht_p7 = mean (ht7,na.rm = TRUE), 
+    ht_p8 = mean (ht8,na.rm = TRUE),
+    ht_p9 = mean (ht9,na.rm = TRUE))
+
+train_personas_colaps_oficio <- oficio_pivot %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(
+    of_p1 = max (of1,na.rm = TRUE), 
+    of_p2 = max (of2,na.rm = TRUE), 
+    of_p3 = max (of3,na.rm = TRUE), 
+    of_p4 = max (of4,na.rm = TRUE), 
+    of_p5 = max (of5,na.rm = TRUE), 
+    of_p6 = max (of6,na.rm = TRUE), 
+    of_p7 = max (of7,na.rm = TRUE), 
+    of_p8 = max (of8,na.rm = TRUE),
+    of_p9 = max (of9,na.rm = TRUE))
+
+
+train_personas_colaps_educ <- educ_pivot %>% 
+  group_by(id,Clase,Dominio) %>%
+  summarize(
+    educ_p1 = max (educ1,na.rm = TRUE), 
+    educ_p2 = max (educ2,na.rm = TRUE), 
+    educ_p3 = max (educ3,na.rm = TRUE), 
+    educ_p4 = max (educ4,na.rm = TRUE), 
+    educ_p5 = max (educ5,na.rm = TRUE), 
+    educ_p6 = max (educ6,na.rm = TRUE), 
+    educ_p7 = max (educ7,na.rm = TRUE), 
+    educ_p8 = max (educ8,na.rm = TRUE),
+    educ_p9 = max (educ9,na.rm = TRUE))
 
 
 
 #Nota, para revisar: ¿inner join vs left join?
 train_h0 <- 
-  inner_join(train_h0, train_personas_colaps,
+  inner_join(train_h0, train_personas_colaps_edad,
              by = c("id","Clase","Dominio"))
 
+train_h0 <- 
+  inner_join(train_h0, train_personas_colaps_ht,
+             by = c("id","Clase","Dominio"))
+
+train_h0 <- 
+  inner_join(train_h0, train_personas_colaps_educ,
+             by = c("id","Clase","Dominio"))
+
+#Creación de otras variables
 
 train_personas_jf <- train_personas %>% mutate(
   mujer_jf_h = if_else(P6020==2 & P6050==1, 1, 0)
@@ -289,82 +318,14 @@ train_personas_jf <- train_personas_jf %>%
   )
 
 
-train_personas_colaps <- train_personas %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(    
-    horas_trabajadas=mean(P6800,na.rm = TRUE), # Se crea la var horas trabajadas
-    analfabeta_h = if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
-    mujer_jf_h = if_else(any(P6020==2 && P6050==1), 1, 0),# Se crea la var mujer jefe de hogar
-    jf_10_18_h = if_else(any(P6050==1 && P6040>=10 && P6040<=18), 1, 0),#Se crea la var jefe de hogar entre 10 y 18 años
-    jf_19_28_h = if_else(any(P6050==1 && P6040>=19 && P6040<=28), 1, 0), #Se crea la var jefe de hogar entre 19 y 28 años
-    jf_29_59_h = if_else(any(P6050==1 && P6040>=29 && P6040<=59), 1, 0), #Se crea la var jefe de hogar entre 29 y 59 años 
-    jf_60_h = if_else(any(P6050==1 && P6040<=60), 1, 0) ) #Se crea la var jefe de hogar mayores de 60 años
+train_h0 <- 
+  inner_join(train_h0, train_personas_jf,
+             by = c("id"))
 
 
+#2.2. Identificar NAs base train_h ---- 
 
-
-
-#Se define la base de datos train_h
-train_h <- train_hogares
-
-
-
-train_personas_colaps <- train_personas %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(
-    horas_trabajadas=mean(P6800,na.rm = TRUE), # Se crea la var horas trabajadas
-    analfabeta_h = if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
-    mujer_jf_h = if_else(any(P6020==2 && P6050==1), 1, 0),# Se crea la var mujer jefe de hogar
-    jf_10_18_h = if_else(any(P6050==1 && P6040>=10 && P6040<=18), 1, 0),#Se crea la var jefe de hogar entre 10 y 18 años
-    jf_19_28_h = if_else(any(P6050==1 && P6040>=19 && P6040<=28), 1, 0), #Se crea la var jefe de hogar entre 19 y 28 años
-    jf_29_59_h = if_else(any(P6050==1 && P6040>=29 && P6040<=59), 1, 0), #Se crea la var jefe de hogar entre 29 y 59 años 
-    jf_60_h = if_else(any(P6050==1 && P6040<=60), 1, 0) ) #Se crea la var jefe de hogar mayores de 60 años
-
-
-#Nota, para revisar: ¿inner join vs left join?
-train_h <- 
-  inner_join(train_h, train_personas_colaps,
-             by = c("id","Clase","Dominio"))
-
-#Se guarda la base de datos en un archivo .rds
-setwd("~/GitHub/MECA_BD_PS2")
-saveRDS(train_h,"./stores/train_h.rds")
-
-#1.4. Definición base test ----
-
-#Se define la base de datos test_h
-test_h <- test_hogares
-
-#Resumen de variables
-summary(test_personas$P6800)#Horas trabajadas NAs 119837 
-summary(test_personas$Pet)#Población en edad de trabajar- NAs 38829
-summary(test_personas$P6210)#Nivel educativo - NAs 9242
-summary(test_personas$P6020)#Sexo 1 hombre 2 mujer 
-summary(test_personas$P6050)#Parentezco con el jefe de hogar
-summary(test_personas$P6040)#Edad
-
-test_personas_colaps <- test_personas %>% 
-  group_by(id,Clase,Dominio) %>%
-  summarize(
-    horas_trabajadas_t = mean(P6800,na.rm = TRUE), # Se crea la var horas trabajadas
-    analfabeta_h_t = if_else(any(Pet==1 && P6210==1), 1, 0), # Se crea la var analfabeta en el hogar
-    mujer_jf_h_t = if_else(any(P6020==2 && P6050==1), 1, 0),# Se crea la var mujer jefe de hogar
-    jf_10_18_h_t = if_else(any(P6050==1 && P6040>=10 && P6040<=18), 1, 0),#Se crea la var jefe de hogar entre 10 y 18 años
-    jf_19_28_h_t = if_else(any(P6050==1 && P6040>=19 && P6040<=28), 1, 0), #Se crea la var jefe de hogar entre 19 y 28 años
-    jf_29_59_h_t= if_else(any(P6050==1 && P6040>=29 && P6040<=59), 1, 0), #Se crea la var jefe de hogar entre 29 y 59 años 
-    jf_60_h_t = if_else(any(P6050==1 && P6040<=60), 1, 0) ) #Se crea la var jefe de hogar mayores de 60 años
-
-#Nota, para revisar: ¿inner join vs left join?
-test_h <- 
-  inner_join(test_h, test_personas_colaps,
-             by = c("id","Clase","Dominio"))
-
-#Se guarda la base de datos en un archivo .rds
-setwd("~/GitHub/MECA_BD_PS2")
-saveRDS(test_h,"./stores/test_h.rds")
-
-#1.5. Identificar NAs base train_h ---- 
-
+train_h <- train_h0
 cantidad_na <- sapply(train_h, function(x) sum(is.na(x)))
 cantidad_na <- data.frame(cantidad_na)
 porcentaje_na <- cantidad_na/nrow(train_h)
@@ -372,7 +333,7 @@ porcentaje_na <- cantidad_na/nrow(train_h)
 # Porcentaje de observaciones faltantes. 
 p <- mean(porcentaje_na[,1])
 print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 11.93% de las entradas están vacías"
+#En promedio el 4.2% de las entradas están vacías"
 
 #Se visualiza el porcentaje de observaciones faltantes por variable
 
@@ -396,7 +357,6 @@ porcentaje_na$variable <- factor(porcentaje_na$variable,
                                  levels = orden)
 
 
-
 # Se grafica el % de NA de las diferentes variables de interés
 ggplot(porcentaje_na[1:nrow(porcentaje_na),], 
        aes(y = variable, x = cantidad_na)) +
@@ -407,69 +367,59 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
   theme_classic() +
   labs(x = "Porcentaje de NAs", y = "Variables") +
   scale_x_continuous(labels = scales::percent, limits = c(0, 1))
-
-require(tidyverse)
-### OJO SE BORRAN LOS NA PARA PROBAR
-filtro <- porcentaje_na$cantidad_na > 0.05
-variables_eliminar <- porcentaje_na$variable[filtro]
-k0 <- ncol(train_h)
-db <- train_h %>%
-  select(variables_eliminar)
-k1 <- ncol(train_h)
-print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
-#revisar porque no están borrando..... 
 
 # Prueba borrado manual--- ajustar o borrar
-vars_drop <- c("P5100", "horas_trabajadas", "P5140", "P5130", "analfabeta_h")
-train_h_v3 <- train_h[,!(names(train_h) %in% vars_drop)]
+vars_drop <- c("P5100", "P5140", "P5130")
+train_h_si <- train_h[,!(names(train_h) %in% vars_drop)]
 k0 <- ncol(train_h)
-k1 <- ncol(train_h_v3)
+k1 <- ncol(train_h_si)
 print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
 
-#1.6. Identificar NAs base test_h ---- 
+#se crea train hogares borrando las filas de ht_p1 que están con NA
 
-cantidad_na <- sapply(train_h, function(x) sum(is.na(x)))
-cantidad_na <- data.frame(cantidad_na)
-porcentaje_na <- cantidad_na/nrow(test_h)
+train_h_si <- train_h_si %>% filter(!is.na(ht_p1))
 
-# Porcentaje de observaciones faltantes. 
-p <- mean(porcentaje_na[,1])
-print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 29.74% de las entradas están vacías"
+#2.3. Convertir en factor variables de base train ---- 
 
-#Se visualiza el porcentaje de observaciones faltantes por variable
+train_h_si$P5000 <- as.factor(train_h_si$P5000)
+train_h_si$P5010 <- as.factor(train_h_si$P5010)
+train_h_si$Depto <- as.factor(train_h_si$Depto)
 
-# se ordena de mayor a menor
-porcentaje_na <- arrange(porcentaje_na, desc(cantidad_na))
+train_h_si$of_p1 <- as.factor(train_h_si$of_p1)
+train_h_si$of_p2 <- as.factor(train_h_si$of_p2)
+train_h_si$of_p3 <- as.factor(train_h_si$of_p3)
+train_h_si$of_p4 <- as.factor(train_h_si$of_p4)
+train_h_si$of_p5 <- as.factor(train_h_si$of_p5)
+train_h_si$of_p6 <- as.factor(train_h_si$of_p6)
+train_h_si$of_p7 <- as.factor(train_h_si$of_p7)
+train_h_si$of_p8 <- as.factor(train_h_si$of_p8)
+train_h_si$of_p9 <- as.factor(train_h_si$of_p9)
 
-# se convierte el nombre de la fila en columna
-porcentaje_na <- rownames_to_column(porcentaje_na, "variable")
+train_h_si$educ_p1 <- as.factor(train_h_si$educ_p1)
+train_h_si$educ_p2 <- as.factor(train_h_si$educ_p2)
+train_h_si$educ_p3 <- as.factor(train_h_si$educ_p3)
+train_h_si$educ_p4 <- as.factor(train_h_si$educ_p4)
+train_h_si$educ_p5 <- as.factor(train_h_si$educ_p5)
+train_h_si$educ_p6 <- as.factor(train_h_si$educ_p6)
+train_h_si$educ_p7 <- as.factor(train_h_si$educ_p7)
+train_h_si$educ_p8 <- as.factor(train_h_si$educ_p8)
+train_h_si$educ_p9 <- as.factor(train_h_si$educ_p9)
 
-# # se quitan las variables que no tienen NAs
-filtro <- porcentaje_na$cantidad_na == 0
-variables_sin_na <- porcentaje_na[filtro, "variable"]
-variables_sin_na <- paste(variables_sin_na, collapse = ", ")
-print(paste("Las variables sin NAs son:", variables_sin_na))
-# 
-porcentaje_na <- porcentaje_na[!filtro,]
-# 
-orden <- porcentaje_na$variable[length(porcentaje_na$variable):1]
 
-porcentaje_na$variable <- factor(porcentaje_na$variable,
-                                 levels = orden)
+train_h_si$mujer_jf_h <- as.factor(train_h_si$mujer_jf_h)
+train_h_si$jf_10_18_h <- as.factor(train_h_si$jf_10_18_h)
+train_h_si$jf_19_28_h <- as.factor(train_h_si$jf_19_28_h)
+train_h_si$jf_29_59_h <- as.factor(train_h_si$jf_29_59_h)
+train_h_si$jf_60_h <- as.factor(train_h_si$jf_60_h)
 
-# Se grafica el % de NA de las diferentes variables de interés
-ggplot(porcentaje_na[1:nrow(porcentaje_na),], 
-       aes(y = variable, x = cantidad_na)) +
-  geom_bar(stat = "identity", fill = "darkblue") +
-  geom_text(aes(label = paste0(round(100*cantidad_na, 1), "%")),
-            colour = "white", position = "dodge", hjust = 1.3,
-            size = 2, fontface = "bold") +
-  theme_classic() +
-  labs(x = "Porcentaje de NAs", y = "Variables") +
-  scale_x_continuous(labels = scales::percent, limits = c(0, 1))
+#2.4. Guardar la base train ----   
 
-#1.7. Tablas descriptivas ---- 
+#Se guarda la base de datos en un archivo .rds
+setwd("~/GitHub/MECA_BD_PS2")
+saveRDS(train_h_si,"./stores/train_h_si.rds")
+
+
+#2.5. Tablas descriptivas ---- 
 
 #Se usa la librería "CreateTableOne" para crear una tabla con todas las variables
 
@@ -485,7 +435,7 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
 #write.csv(Tabla_descr_csv, file = "./views/tabla_descr.csv")
 
 
-#1.8. Gráficas para el análisis de datos---- 
+#2.6. Gráficas para el análisis de datos---- 
 
 #prueba 1 de gráfica
 ggplot(train_h, aes(x=horas_trabajadas, y=Ingtotug,color=mujer_jf_h)) + 
@@ -503,27 +453,35 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 #prueba 3 de gráfica
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 2. MODELOS DE CLASIFICACIÓN DE POBREZA----
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# 3. PREPARACIÓN DE LA BASE DE DATOS TEST Y ESTADÍSTICAS DESCRIPTIVAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-#2.2. ----
-
-
-
-#2.2. ----
-
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 3. MODELOS DE PREDICCIÓN DE INGRESOS----
+# 4. MODELOS DE CLASIFICACIÓN DE POBREZA----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-#3.1. ----
+#4.1. ----
 
 
 
-#3.2. ----
+#4.2. ----
+
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# 5. MODELOS DE PREDICCIÓN DE INGRESOS----
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+#5.1. ----
+
+
+
+#5.2. ----
 
 
 
