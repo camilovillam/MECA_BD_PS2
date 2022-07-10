@@ -56,8 +56,10 @@ p_load(rio,
 install.packages("pacman")
 library(pacman)
 
-p_load(rio, 
+p_load(rio,
+       doParallel,
        stargazer,
+       fabricatr,
        tableone,
        arsenal,
        janitor,
@@ -67,8 +69,11 @@ p_load(rio,
        caret,
        rvest,
        stargazer,
+       smotefamily,
        ROCR,
        pROC,
+       rpart,
+       rpart.plot,
        xgboost)
 
 
@@ -81,7 +86,7 @@ predict <- stats::predict
 # 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#1.1. Cargue de las bases de datos ---- 
+##1.1. Cargue de las bases de datos ---- 
 
 setwd("~/GitHub/MECA_BD_PS2")
 submission_template <-read.csv("./stores/20220703_data/submission_template.csv")
@@ -91,9 +96,9 @@ train_hogares <-readRDS("./stores/20220703_data/train_hogares.rds")
 train_personas <-readRDS("./stores/20220703_data/train_personas.rds")
 
 
-#1.2. Exploración incial de los datos ----
+##1.2. Exploración incial de los datos ----
 
-#Exploración de las bases de datos:
+##Exploración de las bases de datos:
 skim(train_hogares)
 skim(test_hogares)
 skim(train_personas)
@@ -354,16 +359,18 @@ train_h$P5000 <- factor(train_h$P5000)
 train_h$P5090 <- factor(train_h$P5090)
 
 
+#TEMPORAL: ELIMINAR 98 y 16
 nrow(train_h)
-train_h <- train_h[!(train_h$P5000=="98"),]
+train_h <- train_h[!(train_h$P5000=="98" | train_h$P5000=="16"),]
 nrow(train_h)
+
 
 #Temporal, eliminar todos los NA
 #train_h <- train_h[complete.cases(train_h), ]
 
 predict <- stats::predict
 
-#2.1. Partición de la base de datos en tres----
+##2.1. Partición de la base de datos en tres----
 
 #La base de datos Train se divide en tres particiones:
 # Tr_train: Entrenar el modelo
@@ -394,14 +401,14 @@ prop.table(table(Tr_eval$Pobre))
 prop.table(table(Tr_test$Pobre))
 
 
-#2.2. Modelo logit ----
+##2.2. Modelo sencillo Logit ----
 
 #Se guarda la fórmula del modelo
 form_logit_1 <- as.formula("Pobre ~ Npersug + factor(mujer_jf_h)")
 
 form_logit_1 <- as.formula("Pobre ~ Npersug + factor(P5090)")
 
-form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + P5140")
+form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000")
 
 #Se estima el modelo Logit
 mod_logit_1 <-  glm(form_logit_1,
@@ -409,6 +416,9 @@ mod_logit_1 <-  glm(form_logit_1,
                     family=binomial(link="logit"))
 
 summary(mod_logit_1 ,type="text")
+
+#TEMPORAL:
+Tr_test <- Tr_test[!(Tr_test$P5000=="98" | Tr_test$P5000=="16"),]
 
 
 ## Predicción Pobre sobre la base de Test
@@ -431,30 +441,105 @@ confusionMatrix(data=Tr_test$p_logit,
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-# ## ROC
-# pred <- prediction(Tr_test$predict_logit, Tr_test$Pobre)
-# roc_ROCR <- performance(pred,"tpr","fpr")
-# 
-# plot(roc_ROCR, main = "ROC curve", colorize = T)
-# abline(a = 0, b = 1)
-# 
-# ## AUC
-# auc_roc = performance(pred, measure = "auc")
-# auc_roc@y.values[[1]]
+## ROC
+pred <- prediction(Tr_test$predict_logit, Tr_test$Pobre)
+roc_ROCR <- performance(pred,"tpr","fpr")
+
+plot(roc_ROCR, main = "ROC curve", colorize = T)
+abline(a = 0, b = 1)
+
+## AUC
+auc_roc = performance(pred, measure = "auc")
+auc_roc@y.values[[1]]
+
+
+## 2.3. Rebalanceo de clases, remuestreo ----
+
+#### Upsampling ----
+
+set.seed(100)
+upSampledTrain <- upSample(x = Tr_train,
+                           y = Tr_train$Pobre,
+                           ## keep the class variable name the same:
+                           yname = "Pobre")
+
+dim(Tr_train)
+dim(upSampledTrain)
+table(upSampledTrain$Pobre)
+
+prop.table(table(Tr_train$Pobre))
+prop.table(table(upSampledTrain$Pobre))
+
+
+#### Downsampling ----
+
+set.seed(100)
+downSampledTrain <- downSample(x = Tr_train,
+                               y = Tr_train$Pobre,
+                               ## keep the class variable name the same:
+                               yname = "Pobre")
+
+dim(Tr_train)
+dim(downSampledTrain)
+table(downSampledTrain$Pobre)
+
+prop.table(table(Tr_train$Pobre))
+prop.table(table(upSampledTrain$Pobre))
+prop.table(table(downSampledTrain$Pobre))
+
+
+#### SMOTE ----
+
+
+#Automatizar esto con tratamiento de cadenas de caracteres
+predictors <-c ("Npersug","P5090","P5000")
+head(Tr_train[predictors])
+
+
+#Vuelvo dummies los factores
+trainX <- data.frame(model.matrix(form_logit_1,data=Tr_train))[-1]
+
+smote_output = SMOTE(X = trainX,
+                     target = Tr_train$Pobre)
+
+
+smote_output <-  SMOTE(X = Tr_train[predictors],
+                       target = Tr_train$Pobre)
+
+smotedTrain <-  smote_output$data
+
+dim(Tr_train)
+dim(upSampledTrain)
+dim(downSampledTrain)
+dim(smotedTrain)
+
+table(Tr_train$Pobre)
+table(smotedTrain$class)
+
+prop.table(table(Tr_train$Pobre))
+prop.table(table(upSampledTrain$Pobre))
+prop.table(table(downSampledTrain$Pobre))
+prop.table(table(smotedTrain$class))
+
+
+#Ahora se pueden usar los TRAIN rebalanceados en los diferentes modelos
+#Con SMOTE cambia la estructura de la base, ojo.
 
 
 
-##=== 4. predictions: CV ===##
 
-## define control
+##2.4. Model Tunning con Caret ----
+
+#Definición del control (a usarse en los demás modelos)
 fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
+
 control <- trainControl(method = "cv", number = 5,
                         summaryFunction = fiveStats, 
                         classProbs = TRUE,
                         verbose=FALSE,
                         savePredictions = T)
 
-## train
+## Entrenar el modelo
 caret_logit  <-  train(form_logit_1,
                     data=Tr_train,
                     method="glm",
@@ -478,8 +563,79 @@ auc_roc = performance(pred, measure = "auc")
 auc_roc@y.values[[1]]
 
 
+###Modelos Logit Lasso ----
+#POR EL MOMENTO, NO FUNCIONAN, NAs.
 
-#Modelo LDA: ----
+
+#Lasso
+lambda_grid <- 10^seq(-4, 0.01, length = 200) #en la practica se suele usar una grilla de 200 o 300
+lambda_grid
+
+
+#Ajustado para sensibilidad:
+mylogit_lasso_sens <- train(
+  form_logit_1,
+  data = Tr_train,
+  method = "glmnet",
+  trControl = control,
+  family = "binomial",
+  metric = "Sens",
+  tuneGrid = expand.grid(alpha = 0,lambda=lambda_grid),
+  preProcess = c("center", "scale")
+)
+
+#Ajustado para ROC:
+mylogit_lasso_roc <- train(
+  form_logit_1,
+  data = Tr_train,
+  method = "glmnet",
+  trControl = control,
+  family = "binomial",
+  metric = "ROC",
+  tuneGrid = expand.grid(alpha = 0,lambda=lambda_grid),
+  preProcess = c("center", "scale")
+)
+
+#Ajustado para accuracy:
+mylogit_lasso_acc <- train(
+  form_logit_1,
+  data = Tr_train,
+  method = "glmnet",
+  trControl = control,
+  family = "binomial",
+  metric = "Accuracy",
+  tuneGrid = expand.grid(alpha = 0,lambda=lambda_grid),
+  preProcess = c("center", "scale")
+)
+
+
+###Puntos de cortes alternativos ----
+
+evalResults <- data.frame(Pobre = Tr_eval$Pobre)
+
+
+evalResults$Roc <- predict(caret_logit, newdata = Tr_eval,
+                           type = "prob")[,2] ##OJO!!! ¿1 o 2?
+
+
+?roc
+
+rfROC <- roc(evalResults$Pobre, evalResults$Roc, levels = rev(levels(evalResults$Pobre)))
+rfROC
+
+rfThresh <- coords(rfROC, x = "best", best.method = "closest.topleft")
+rfThresh
+
+
+evalResults <- evalResults %>% 
+  mutate(hat_def_05=ifelse(evalResults$Roc>0.5,"Pobre","No_pobre"),
+         hat_def_rfThresh=ifelse(evalResults$Roc>rfThresh$threshold,"Pobre","No_pobre"))
+
+with(evalResults,table(Pobre,hat_def_05))
+with(evalResults,table(Pobre,hat_def_rfThresh))
+
+
+###Modelo LDA ----
 
 library("MASS")
 
@@ -500,23 +656,8 @@ abline(a = 0, b = 1)
 
 
 
-##=== 5. optimal cutoff ===##
 
-evalResults <- data.frame(Pobre = Tr_eval$Pobre)
-
-
-evalResults$Roc <- predict(caret_logit, newdata = Tr_eval,
-                           type = "prob")[,2]
-
-rfROC <- roc(evalResults$Pobre, evalResults$Roc, levels = rev(levels(evalResults$Pobre)))
-rfROC
-
-rfThresh <- coords(rfROC, x = "best", best.method = "closest.topleft")
-rfThresh
-
-
-
-#2.3.Varios modelos ----
+##2.5.Otros modelos ----
 
 # Sugerencia: empezar con el más complejo: 
   # Meterle todas las variables en un Boosting
@@ -539,7 +680,23 @@ rfThresh
   #XGBoost + rebalanceo +  cutoff 
 
 
-##Modelo ADBoost ----
+###Preparación del PC, cálculos en paralelo ----
+
+n_cores <- detectCores()
+print(paste("Mi PC tiene", n_cores, "nucleos"))
+
+# Vamos a usar n_cores - 2 procesadores para esto
+cl <- makePSOCKcluster(n_cores) 
+registerDoParallel(cl)
+
+##Ejecutar...
+
+# Liberamos nuestros procesadores
+stopCluster(cl)
+
+
+
+###Modelo XGBoost ----
 
 install.packages("xgboost")
 require("xgboost")
@@ -565,7 +722,83 @@ xgboost <- train(
 )
 
 pred_xgb <- predict(xgboost,Tr_test)
-confusionMatrix(Tr_test$Pobre,pred_xgb)
+confusionMatrix(Tr_test$Pobre,pred_xgb,positive="Pobre")
+
+#Pendiente: Gráfica ROC de XGBoost:
+# https://stackoverflow.com/questions/46736934/plotting-the-auc-from-an-xgboost-model-in-r
+
+
+
+###Modelo árbol básico (CART) ----
+
+form_tree <- as.formula("Pobre ~ Npersug + P5090 + factor(mujer_jf_h)")
+
+#cp_alpha<-seq(from = 0, to = 0.1, length = 10)
+
+tree <- train(
+  form_tree,
+  data = Tr_train,
+  method = "rpart",
+  trControl = control,
+  parms=list(split='Gini'),
+  #tuneGrid = expand.grid(cp = cp alpha)#,
+  tuneLength=200
+  #preProcess = c("center", "scale")
+)
+
+tree
+rpart.plot::prp(tree$finalModel)
+pred_tree <- predict(tree,Tr_test)
+c_matr_tree <- confusionMatrix(Tr_test$Pobre,pred_tree,positive="Pobre")
+c_matr_tree
+
+
+
+# Árbol con balance de clases, upsample:
+
+tree_up <- train(
+  form_tree,
+  data = upSampledTrain,
+  method = "rpart",
+  trControl = control,
+  parms=list(split='Gini'),
+  #tuneGrid = expand.grid(cp = cp alpha)#,
+  tuneLength=200
+  #preProcess = c("center", "scale")
+)
+
+tree_up
+rpart.plot::prp(tree_up$finalModel)
+pred_tree_up <- predict(tree_up,Tr_test)
+confusionMatrix(Tr_test$Pobre,pred_tree_up,positive="Pobre")
+
+
+# Arbol con downsample:
+
+tree_down <- train(
+  form_tree,
+  data = downSampledTrain,
+  method = "rpart",
+  trControl = control,
+  parms=list(split='Gini'),
+  #tuneGrid = expand.grid(cp = cp alpha)#,
+  tuneLength=200
+  #preProcess = c("center", "scale")
+)
+
+tree_down
+rpart.plot::prp(tree_down$finalModel)
+pred_tree_down <- predict(tree_down,Tr_test)
+confusionMatrix(Tr_test$Pobre,pred_tree_down,positive="Pobre")
+
+
+
+
+### Modelo de árbol sofisticado (clase de Lucas) ----
+
+
+
+
 
 
 
