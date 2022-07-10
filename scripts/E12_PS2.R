@@ -46,6 +46,36 @@ p_load(rio,
        rvest,
        stargazer)
 
+
+#Recomendación de Eduard: 09/07/2022
+
+#p_load instala y carga, en ese sentido es eficiente.
+#Si no queremos usar p_load, install + require (o library)
+#Pero no ambos, pues es redudante. Mantenerlo consistente.
+
+install.packages("pacman")
+library(pacman)
+
+p_load(rio, 
+       stargazer,
+       tableone,
+       arsenal,
+       janitor,
+       tidyverse,
+       gamlr,
+       skimr, 
+       caret,
+       rvest,
+       stargazer,
+       ROCR,
+       pROC)
+
+
+## Resolver conflictos de paquetes
+#(Definir cuáles variables usar)
+predict <- stats::predict
+
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -306,11 +336,31 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 
 #prueba 3 de gráfica
 
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 2. MODELOS DE CLASIFICACIÓN DE POBREZA----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+#Temporal: lectura BD
 
+rm(list=ls())
+
+setwd("~/GitHub/MECA_BD_PS2")
+train_h <-readRDS("./stores/train_h.rds")
+
+str(train_h$Pobre)
+
+train_h$Pobre <- factor(train_h$Pobre,levels=c("1","0"),labels=c("Pobre","No_pobre"))
+
+str(train_h$Pobre)
+
+levels(train_h$Pobre)
+nlevels(train_h$Pobre)
+
+#Temporal, eliminar todos los NA
+#train_h <- train_h[complete.cases(train_h), ]
+
+predict <- stats::predict
 
 #2.1. Partición de la base de datos en tres----
 
@@ -319,41 +369,157 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 # Tr_eval: Evaluar, ajustar y refinar el modelo
 # Tr_test: Probar el modelo
 
+#Balance inicial
+prop.table(table(train_h$Pobre))
 
+#Generamos las particiones
 set.seed(100)
-split1 <- createDataPartition(train_h_v3$Pobre, p = .7)[[1]]
+split1 <- createDataPartition(train_h$Pobre, p = .7)[[1]]
 length(split1)
 
-other <- train_h_v3[-Tr_train,]
-Tr_train <- train_h_v3[ Tr_train,]
+other <- train_h[-split1,]
+Tr_train <- train_h[split1,]
 
-set.seed(200)
 split2 <- createDataPartition(other$Pobre, p = 1/3)[[1]]
 
 Tr_eval <- other[ split2,]
 Tr_test <- other[-split2,]
 
 
+## Balance final
+prop.table(table(train_h$Pobre))
+prop.table(table(Tr_train$Pobre))
+prop.table(table(Tr_eval$Pobre))
+prop.table(table(Tr_test$Pobre))
+
+
 #2.2. Modelo logit ----
 
-#Se guarda la fórmula del modelo (para poderlo variar luego)
-form_logit_1 <- as.formula("Pobre~ Ingpcug+factor(mujer_jf_h)")
+#Se guarda la fórmula del modelo
+form_logit_1 <- as.formula("Pobre ~ Npersug + factor(mujer_jf_h)")
 
-#Se entrena el modelo logit
+
+#Se estima el modelo Logit
 mod_logit_1 <-  glm(form_logit_1,
                     data= Tr_train,
-                    family="binomial")
-
+                    family=binomial(link="logit"))
 
 summary(mod_logit_1 ,type="text")
 
 
+## Predicción Pobre sobre la base de Test
+Tr_test$predict_logit <- predict(mod_logit_1, Tr_test, type="response")
+
+## Se hace un gráfico de cajas y bigotes para explorar el punto de corte
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit)) + 
+  geom_boxplot(aes(fill=Pobre)) + theme_test()
+
+#Se agrega el resultado de la predicción según la probabilidad de Logit
+Tr_test <- Tr_test %>% 
+  mutate(p_logit=ifelse(predict_logit>=0.5,1,0) %>% 
+           factor(.,levels=c(1,0),labels=c("Pobre","No_pobre")))
 
 
-#2.3. ----
+#Métricas de resultados:
+
+## Matriz de confusión
+confusionMatrix(data=Tr_test$p_logit, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+
+## ROC
+pred <- prediction(Tr_test$p_logit, Tr_test$Pobre)
+
+str(Tr_test$p_logit)
+str(Tr_test$Pobre)
+
+Tr_test$Pobre
+
+roc_ROCR <- performance(pred,"tpr","fpr")
+
+plot(roc_ROCR, main = "ROC curve", colorize = T)
+abline(a = 0, b = 1)
+
+## AUC
+auc_roc = performance(pred, measure = "auc")
+auc_roc@y.values[[1]]
 
 
-#2.4. ----
+
+##=== 4. predictions: CV ===##
+
+## define control
+fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
+control <- trainControl(method = "cv", number = 5,
+                        summaryFunction = fiveStats, 
+                        classProbs = TRUE,
+                        verbose=FALSE,
+                        savePredictions = T)
+
+## train
+caret_logit  <-  train(form_logit_1,
+                    data=Tr_train,
+                    method="glm",
+                    trControl = control,
+                    family = "binomial",
+                    preProcess = c("center", "scale"))
+caret_logit
+
+## predict
+Tr_test$p_caret <- predict(caret_logit , Tr_test , type="prob")[1]
+
+## ROC
+pred <- prediction(Tr_test$p_caret , Tr_test$Pobre)
+
+roc_ROCR <- performance(pred,"tpr","fpr")
+
+plot(roc_ROCR, main = "ROC curve", colorize = T)
+abline(a = 0, b = 1)
+
+auc_roc = performance(pred, measure = "auc")
+auc_roc@y.values[[1]]
+
+
+
+
+##=== 5. optimal cutoff ===##
+
+evalResults <- data.frame(Pobre = Tr_eval$Pobre)
+
+
+evalResults$Roc <- predict(caret_logit, newdata = Tr_eval,
+                           type = "prob")[,1]
+
+rfROC <- roc(evalResults$Pobre, evalResults$Roc, levels = rev(levels(evalResults$Pobre)))
+rfROC
+
+rfThresh <- coords(rfROC, x = "best", best.method = "closest.topleft")
+rfThresh
+
+
+
+#2.3.Varios modelos ----
+
+# Sugerencia: empezar con el más complejo: 
+  # Meterle todas las variables en un Boosting
+  # Usar "Variables importance"
+  # Identificar las que mejor funcionan
+
+# Logit simple
+# Logit lasso
+# Otro cut off
+# Balancear la muestra:
+  # upsample
+  # down
+  # combinación (SMOTE)
+# Árboles
+# Random forest
+# Boosting trees
+# ADboost
+# XGBoost
+# Todas las combinaciones posibles
+  #XGBoost + rebalanceo +  cutoff 
+
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
