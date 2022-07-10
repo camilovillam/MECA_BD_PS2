@@ -68,7 +68,8 @@ p_load(rio,
        rvest,
        stargazer,
        ROCR,
-       pROC)
+       pROC,
+       xgboost)
 
 
 ## Resolver conflictos de paquetes
@@ -348,14 +349,14 @@ rm(list=ls())
 setwd("~/GitHub/MECA_BD_PS2")
 train_h <-readRDS("./stores/train_h.rds")
 
-str(train_h$Pobre)
+train_h$Pobre <- factor(train_h$Pobre,levels=c("0","1"),labels=c("No_pobre","Pobre"))
+train_h$P5000 <- factor(train_h$P5000)
+train_h$P5090 <- factor(train_h$P5090)
 
-train_h$Pobre <- factor(train_h$Pobre,levels=c("1","0"),labels=c("Pobre","No_pobre"))
 
-str(train_h$Pobre)
-
-levels(train_h$Pobre)
-nlevels(train_h$Pobre)
+nrow(train_h)
+train_h <- train_h[!(train_h$P5000=="98"),]
+nrow(train_h)
 
 #Temporal, eliminar todos los NA
 #train_h <- train_h[complete.cases(train_h), ]
@@ -398,6 +399,9 @@ prop.table(table(Tr_test$Pobre))
 #Se guarda la fórmula del modelo
 form_logit_1 <- as.formula("Pobre ~ Npersug + factor(mujer_jf_h)")
 
+form_logit_1 <- as.formula("Pobre ~ Npersug + factor(P5090)")
+
+form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + P5140")
 
 #Se estima el modelo Logit
 mod_logit_1 <-  glm(form_logit_1,
@@ -416,8 +420,8 @@ ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit)) +
 
 #Se agrega el resultado de la predicción según la probabilidad de Logit
 Tr_test <- Tr_test %>% 
-  mutate(p_logit=ifelse(predict_logit>=0.5,1,0) %>% 
-           factor(.,levels=c(1,0),labels=c("Pobre","No_pobre")))
+  mutate(p_logit=ifelse(predict_logit<0.203,0,1) %>% 
+           factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
 
 #Métricas de resultados:
@@ -427,22 +431,16 @@ confusionMatrix(data=Tr_test$p_logit,
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-## ROC
-pred <- prediction(Tr_test$p_logit, Tr_test$Pobre)
-
-str(Tr_test$p_logit)
-str(Tr_test$Pobre)
-
-Tr_test$Pobre
-
-roc_ROCR <- performance(pred,"tpr","fpr")
-
-plot(roc_ROCR, main = "ROC curve", colorize = T)
-abline(a = 0, b = 1)
-
-## AUC
-auc_roc = performance(pred, measure = "auc")
-auc_roc@y.values[[1]]
+# ## ROC
+# pred <- prediction(Tr_test$predict_logit, Tr_test$Pobre)
+# roc_ROCR <- performance(pred,"tpr","fpr")
+# 
+# plot(roc_ROCR, main = "ROC curve", colorize = T)
+# abline(a = 0, b = 1)
+# 
+# ## AUC
+# auc_roc = performance(pred, measure = "auc")
+# auc_roc@y.values[[1]]
 
 
 
@@ -466,7 +464,7 @@ caret_logit  <-  train(form_logit_1,
 caret_logit
 
 ## predict
-Tr_test$p_caret <- predict(caret_logit , Tr_test , type="prob")[1]
+Tr_test$p_caret <- predict(caret_logit , Tr_test , type="prob")[2]
 
 ## ROC
 pred <- prediction(Tr_test$p_caret , Tr_test$Pobre)
@@ -481,6 +479,26 @@ auc_roc@y.values[[1]]
 
 
 
+#Modelo LDA: ----
+
+library("MASS")
+
+form_LDA <- as.formula("Pobre ~ Npersug + factor(P5090)")
+
+mylda <- lda(form_LDA, data = Tr_train)
+p_hat_mylda <- predict(mylda, Tr_test, type="response")
+pred_mylda <- prediction(p_hat_mylda$posterior[,2], Tr_test$Pobre)
+
+roc_mylda <- performance(pred_mylda,"tpr","fpr")
+
+
+#Para agregar varias ROC:
+
+plot(roc_ROCR, main = "ROC curve", colorize = FALSE, col="red")
+plot(roc_mylda,add=TRUE, colorize = FALSE, col="blue")
+abline(a = 0, b = 1)
+
+
 
 ##=== 5. optimal cutoff ===##
 
@@ -488,7 +506,7 @@ evalResults <- data.frame(Pobre = Tr_eval$Pobre)
 
 
 evalResults$Roc <- predict(caret_logit, newdata = Tr_eval,
-                           type = "prob")[,1]
+                           type = "prob")[,2]
 
 rfROC <- roc(evalResults$Pobre, evalResults$Roc, levels = rev(levels(evalResults$Pobre)))
 rfROC
@@ -519,6 +537,37 @@ rfThresh
 # XGBoost
 # Todas las combinaciones posibles
   #XGBoost + rebalanceo +  cutoff 
+
+
+##Modelo ADBoost ----
+
+install.packages("xgboost")
+require("xgboost")
+
+form_xgboost <- as.formula("Pobre ~ Npersug + P5090 + P5000 + factor(mujer_jf_h)")
+
+grid_default <- expand.grid(nrounds = c(250,500),
+                            max_depth = c(4,6,8),
+                            eta = c(0.01,0.3,0.5),
+                            gamma = c(0,1),
+                            min_child_weight = c(10, 25,50),
+                            colsample_bytree = c(0.7),
+                            subsample = c(0.6))
+
+xgboost <- train(
+  form_xgboost,
+  data = Tr_train,
+  method = "xgbTree",
+  trControl = control,
+  metric = "Sens",
+  tuneGrid = grid_default,
+  preProcess = c("center", "scale")
+)
+
+pred_xgb <- predict(xgboost,Tr_test)
+confusionMatrix(Tr_test$Pobre,pred_xgb)
+
+
 
 
 
