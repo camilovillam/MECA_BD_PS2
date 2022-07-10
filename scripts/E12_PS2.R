@@ -258,8 +258,37 @@ train_h0 <-
              by = c("id","Clase","Dominio"))
 
 
+train_personas_jf <- train_personas %>% mutate(
+  mujer_jf_h = if_else(P6020==2 & P6050==1, 1, 0)
+)
 
-    
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_10_18_h = if_else(P6050==1 & P6040>=10 & P6040<=18, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_19_28_h = if_else(P6050==1 & P6040>=19 & P6040<=28, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_29_59_h = if_else(P6050==1 & P6040>=29 & P6040<=59, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_60_h = if_else(P6050==1 & P6040>=60, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>%
+  group_by(id) %>%
+  summarise(
+    mujer_jf_h = max(mujer_jf_h),
+    jf_10_18_h = max(jf_10_18_h),
+    jf_19_28_h = max(jf_19_28_h),
+    jf_29_59_h = max(jf_29_59_h),
+    jf_60_h = max(jf_60_h),
+  )
+
+
 train_personas_colaps <- train_personas %>% 
   group_by(id,Clase,Dominio) %>%
   summarize(    
