@@ -74,6 +74,7 @@ p_load(rio,
        pROC,
        rpart,
        rpart.plot,
+       glmnet,
        xgboost)
 
 
@@ -352,11 +353,11 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 rm(list=ls())
 
 setwd("~/GitHub/MECA_BD_PS2")
-train_h <-readRDS("./stores/train_h.rds")
+train_h <-readRDS("./stores/train_h_si.rds")
 
 train_h$Pobre <- factor(train_h$Pobre,levels=c("0","1"),labels=c("No_pobre","Pobre"))
-train_h$P5000 <- factor(train_h$P5000)
-train_h$P5090 <- factor(train_h$P5090)
+# train_h$P5000 <- factor(train_h$P5000)
+# train_h$P5090 <- factor(train_h$P5090)
 
 
 #TEMPORAL: ELIMINAR 98 y 16
@@ -401,7 +402,17 @@ prop.table(table(Tr_eval$Pobre))
 prop.table(table(Tr_test$Pobre))
 
 
-##2.2. Modelo sencillo Logit ----
+## 2.2. Modelos con diferentes variables: 
+
+# modelo1
+# modelo2
+# modelo3
+# modelo4
+# modelo5
+
+colnames(train_h)
+
+## 2.2. Modelo sencillo Logit ----
 
 #Se guarda la fórmula del modelo
 form_logit_1 <- as.formula("Pobre ~ Npersug + factor(mujer_jf_h)")
@@ -410,6 +421,10 @@ form_logit_1 <- as.formula("Pobre ~ Npersug + factor(P5090)")
 
 form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000")
 
+form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + edad_p1 + 
+                           mujer_jf_h + educ_p1")
+
+
 #Se estima el modelo Logit
 mod_logit_1 <-  glm(form_logit_1,
                     data= Tr_train,
@@ -417,7 +432,7 @@ mod_logit_1 <-  glm(form_logit_1,
 
 summary(mod_logit_1 ,type="text")
 
-#TEMPORAL:
+  #TEMPORAL:
 Tr_test <- Tr_test[!(Tr_test$P5000=="98" | Tr_test$P5000=="16"),]
 
 
@@ -430,7 +445,7 @@ ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit)) +
 
 #Se agrega el resultado de la predicción según la probabilidad de Logit
 Tr_test <- Tr_test %>% 
-  mutate(p_logit=ifelse(predict_logit<0.203,0,1) %>% 
+  mutate(p_logit=ifelse(predict_logit<0.5,0,1) %>% 
            factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
 
@@ -552,20 +567,20 @@ caret_logit
 Tr_test$p_caret <- predict(caret_logit , Tr_test , type="prob")[2]
 
 ## ROC
-pred <- prediction(Tr_test$p_caret , Tr_test$Pobre)
+pred_cv <- prediction(Tr_test$p_caret , Tr_test$Pobre)
 
-roc_ROCR <- performance(pred,"tpr","fpr")
+roc_ROCR_cv <- performance(pred_cv,"tpr","fpr")
 
-plot(roc_ROCR, main = "ROC curve", colorize = T)
-abline(a = 0, b = 1)
+plot(roc_ROCR_cv, main = "ROC curve", add=TRUE, colorize = FALSE, col="blue")
 
-auc_roc = performance(pred, measure = "auc")
+auc_roc = performance(pred_cv, measure = "auc")
 auc_roc@y.values[[1]]
 
 
 ###Modelos Logit Lasso ----
-#POR EL MOMENTO, NO FUNCIONAN, NAs.
 
+install.packages("glmnet")
+require(glmnet)
 
 #Lasso
 lambda_grid <- 10^seq(-4, 0.01, length = 200) #en la practica se suele usar una grilla de 200 o 300
@@ -583,6 +598,7 @@ mylogit_lasso_sens <- train(
   tuneGrid = expand.grid(alpha = 0,lambda=lambda_grid),
   preProcess = c("center", "scale")
 )
+
 
 #Ajustado para ROC:
 mylogit_lasso_roc <- train(
@@ -607,6 +623,76 @@ mylogit_lasso_acc <- train(
   tuneGrid = expand.grid(alpha = 0,lambda=lambda_grid),
   preProcess = c("center", "scale")
 )
+
+#Comparación de los Logit_Lasso:
+
+Tr_test$lasso_sens <- predict(mylogit_lasso_sens,
+                              newdata = Tr_test,
+                              type = "prob")[,2] #REVISAR
+
+Tr_test$lasso_roc <- predict(mylogit_lasso_roc,
+                              newdata = Tr_test,
+                              type = "prob")[,2] #REVISAR
+
+Tr_test$lasso_acc <- predict(mylogit_lasso_acc,
+                             newdata = Tr_test,
+                             type = "prob")[,2] #REVISAR
+
+
+Tr_test$lasso_sens_clas <- factor(ifelse(Tr_test$lasso_sens<0.5,"No_pobre","Pobre"))
+Tr_test$lasso_roc_clas <- factor(ifelse(Tr_test$lasso_roc<0.5,"No_pobre","Pobre"))
+Tr_test$lasso_acc_clas <- factor(ifelse(Tr_test$lasso_acc<0.5,"No_pobre","Pobre"))
+
+
+## Matriz de confusión
+confusionMatrix(data=Tr_test$lasso_sens_clas, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+
+confusionMatrix(data=Tr_test$lasso_roc_clas, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+
+confusionMatrix(data=Tr_test$lasso_acc_clas, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+
+# ROC
+pred_lasso_sens <- prediction(Tr_test$lasso_sens, Tr_test$Pobre)
+pred_lasso_roc <- prediction(Tr_test$lasso_roc, Tr_test$Pobre)
+pred_lasso_acc <- prediction(Tr_test$lasso_acc, Tr_test$Pobre)
+
+roc_ROCR_lasso_sens <- performance(pred_lasso_sens,"tpr","fpr")
+roc_ROCR_lasso_roc <- performance(pred_lasso_roc,"tpr","fpr")
+roc_ROCR_lasso_acc <- performance(pred_lasso_acc,"tpr","fpr")
+
+plot(roc_ROCR_lasso_sens, main = "ROC curve", add=FALSE, colorize = F,col="red")
+plot(roc_ROCR_lasso_roc, main = "ROC curve", add=TRUE, colorize = F,col="blue")
+plot(roc_ROCR_lasso_acc, main = "ROC curve", add=TRUE, colorize = F,col="green")
+
+
+# AUC
+auc_roc_lasso_sens  <-  performance(pred_lasso_sens, measure = "auc")
+auc_roc_lasso_roc <-  performance(pred_lasso_roc, measure = "auc")
+auc_roc_lasso_acc <-  performance(pred_lasso_acc, measure = "auc")
+
+auc_roc_lasso_sens@y.values[[1]]
+auc_roc_lasso_roc@y.values[[1]]
+auc_roc_lasso_acc@y.values[[1]]
+
+
+#Ajustado para accuracy con UPSAMPLE:
+mylogit_lasso_acc_ups <- train(
+  form_logit_1,
+  data = upSampledTrain,
+  method = "glmnet",
+  trControl = control,
+  family = "binomial",
+  metric = "Accuracy",
+  tuneGrid = expand.grid(alpha = 0,lambda=lambda_grid),
+  preProcess = c("center", "scale")
+)
+
 
 
 ###Puntos de cortes alternativos ----
