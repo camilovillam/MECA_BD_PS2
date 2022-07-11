@@ -148,8 +148,6 @@ edad_pivot <- train_personas %>%  pivot_wider (names_from = P6050,#Parentezco co
 
 edad_pivot <- select(edad_pivot,
                   id,
-                  Clase,
-                  Dominio,
                   edad1,
                   edad2,
                   edad3,
@@ -168,8 +166,6 @@ horas_trabajadas_pivot <- train_personas %>% pivot_wider(names_from = P6050,
 
 horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
                   id,
-                  Clase,
-                  Dominio,
                   ht1,
                   ht2,
                   ht3,
@@ -187,8 +183,6 @@ oficio_pivot <- train_personas %>% pivot_wider(names_from = P6050,
 
 oficio_pivot <- select (oficio_pivot,
                   id,
-                  Clase,
-                  Dominio,
                   of1,
                   of2,
                   of3,
@@ -207,8 +201,6 @@ educ_pivot <- train_personas %>% pivot_wider(names_from = P6050,
 
 educ_pivot <- select (educ_pivot,
                   id,
-                  Clase,
-                  Dominio,
                   educ1,
                   educ2,
                   educ3,
@@ -223,7 +215,7 @@ educ_pivot <- select (educ_pivot,
 #se agregan los casos por tipo de persona segun la función
 
 train_personas_colaps_edad <- edad_pivot %>% 
-  group_by(id,Clase,Dominio) %>%
+  group_by(id) %>%
   summarize(
     edad_p1 = max (edad1,na.rm = TRUE), 
     edad_p2 = max (edad2,na.rm = TRUE), 
@@ -236,7 +228,7 @@ train_personas_colaps_edad <- edad_pivot %>%
     edad_p9 = max (edad9,na.rm = TRUE))
 
 train_personas_colaps_ht <- horas_trabajadas_pivot %>% 
-  group_by(id,Clase,Dominio) %>%
+  group_by(id) %>%
   summarize(
     ht_p1 = max (ht1,na.rm = TRUE), 
     ht_p2 = max (ht2,na.rm = TRUE), 
@@ -249,7 +241,7 @@ train_personas_colaps_ht <- horas_trabajadas_pivot %>%
     ht_p9 = max (ht9,na.rm = TRUE))
 
 train_personas_colaps_oficio <- oficio_pivot %>% 
-  group_by(id,Clase,Dominio) %>%
+  group_by(id) %>%
   summarize(
     of_p1 = max (of1,na.rm = TRUE), 
     of_p2 = max (of2,na.rm = TRUE), 
@@ -262,7 +254,7 @@ train_personas_colaps_oficio <- oficio_pivot %>%
     of_p9 = max (of9,na.rm = TRUE))
 
 train_personas_colaps_educ <- educ_pivot %>% 
-  group_by(id,Clase,Dominio) %>%
+  group_by(id) %>%
   summarize(
     educ_p1 = max (educ1,na.rm = TRUE), 
     educ_p2 = max (educ2,na.rm = TRUE), 
@@ -321,6 +313,42 @@ train_personas_jf <- train_personas_jf %>% mutate(
   jf_afiliado = if_else(P6050==1 & P6090==2 | P6090==3, 1, 0)
 )
 
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_sintrabajo = if_else(P6050==1 & P6240==2 | P6240==5, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  pj_jf_ofhogar = if_else(P6050==2 & P6240==4, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  pj_jf_sintrabajo = if_else(P6050==2 & P6240==2, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_nc_pension = if_else(P6050==1 & P6920==2, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_P7422 = if_else(P6050==1 & P7422==2, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  pj_jf_P7422 = if_else(P6050==2 & P7422==2, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  jf_P7472 = if_else(P6050==1 & P7472==2, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  pj_jf_P7472 = if_else(P6050==2 & P7472==2, 1, 0)
+)
+
+train_personas_jf <- train_personas_jf %>% mutate(
+  es_hijo = if_else(P6050==3, 1, 0)
+)
+
 train_personas_jf <- train_personas_jf %>%
   group_by(id) %>%
   summarise(
@@ -330,7 +358,16 @@ train_personas_jf <- train_personas_jf %>%
     jf_29_59_h = max(jf_29_59_h),
     jf_60_h = max(jf_60_h),
     jf_sub = max(jf_sub),
-    jf_afiliado = max(jf_afiliado)
+    jf_afiliado = max(jf_afiliado),
+    jf_sintrabajo = max(jf_sintrabajo),
+    pj_jf_ofhogar = max(pj_jf_ofhogar),
+    pj_jf_sintrabajo = max(pj_jf_sintrabajo),
+    jf_nc_pension = max(jf_nc_pension),
+    jf_P7422 = max(jf_P7422),
+    pj_jf_P7422 = max(pj_jf_P7422),
+    jf_P7472 = max(jf_P7472),
+    pj_jf_P7472 = max(pj_jf_P7472),
+    hijos = sum(es_hijo)
   )
 
 
@@ -349,7 +386,7 @@ porcentaje_na <- cantidad_na/nrow(train_h)
 # Porcentaje de observaciones faltantes. 
 p <- mean(porcentaje_na[,1])
 print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 3.06% de las entradas están vacías"
+#En promedio el 8.06% de las entradas están vacías"
 
 #Se visualiza el porcentaje de observaciones faltantes por variable
 
@@ -385,7 +422,16 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
   scale_x_continuous(labels = scales::percent, limits = c(0, 1))
 
 # Prueba borrado manual--- ajustar o borrar
-vars_drop <- c("P5100", "P5140", "P5130", "jf_afiliado")
+vars_drop <- c("P5100", 
+               "jf_P7422",
+               "jf_P7472",
+               "P5140", 
+               "pj_jf_P7422",
+               "P5130",
+               "jf_afiliado",
+               "jf_sintrabajo",
+               "pj_jf_P7472",
+               "jf_nc_pension")
 train_h_si <- train_h[,!(names(train_h) %in% vars_drop)]
 k0 <- ncol(train_h)
 k1 <- ncol(train_h_si)
@@ -395,40 +441,49 @@ print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "colu
 
 train_h_si <- train_h_si %>% filter(!is.na(jf_sub))#pasa de 164960 a 155089 obs
 train_h_si <- train_h_si [is.finite(train_h_si$ht_p1), ] #pasa de 155089 a 147231 obs
+train_h_si <- train_h_si %>% filter(!is.na(pj_jf_ofhogar)) #pasa de 147231 a 147215 obs
+train_h_si <- train_h_si %>% filter(!is.na(pj_jf_sintrabajo)) #pasa de 147215a 147215 obs
 
-#2.3. Convertir en factor variables de base train ---- 
+#2.3. Convertir en factor variables de base train y etiquetar---- 
 
-train_h_si$P5000 <- as.factor(train_h_si$P5000)
-train_h_si$P5010 <- as.factor(train_h_si$P5010)
-train_h_si$P5090 <- as.factor(train_h_si$P5090)
-train_h_si$Depto <- as.factor(train_h_si$Depto)
+#se llama la librería haven 
+library(haven)
 
-train_h_si$of_p1 <- as.factor(train_h_si$of_p1)
-train_h_si$of_p2 <- as.factor(train_h_si$of_p2)
-train_h_si$of_p3 <- as.factor(train_h_si$of_p3)
-train_h_si$of_p4 <- as.factor(train_h_si$of_p4)
-train_h_si$of_p5 <- as.factor(train_h_si$of_p5)
-train_h_si$of_p6 <- as.factor(train_h_si$of_p6)
-train_h_si$of_p7 <- as.factor(train_h_si$of_p7)
-train_h_si$of_p8 <- as.factor(train_h_si$of_p8)
-train_h_si$of_p9 <- as.factor(train_h_si$of_p9)
+train_h_si$P5000 <- factor(train_h_si$P5000)
+train_h_si$P5010 <- factor(train_h_si$P5010)
+train_h_si$P5090 <- factor(train_h_si$P5090)
+train_h_si$Depto <- factor(train_h_si$Depto)
+train_h_si$Pobre <- factor(train_h_si$Pobre, labels = c("No Pobre", "Pobre" ))
 
-train_h_si$educ_p1 <- as.factor(train_h_si$educ_p1)
-train_h_si$educ_p2 <- as.factor(train_h_si$educ_p2)
-train_h_si$educ_p3 <- as.factor(train_h_si$educ_p3)
-train_h_si$educ_p4 <- as.factor(train_h_si$educ_p4)
-train_h_si$educ_p5 <- as.factor(train_h_si$educ_p5)
-train_h_si$educ_p6 <- as.factor(train_h_si$educ_p6)
-train_h_si$educ_p7 <- as.factor(train_h_si$educ_p7)
-train_h_si$educ_p8 <- as.factor(train_h_si$educ_p8)
-train_h_si$educ_p9 <- as.factor(train_h_si$educ_p9)
 
-train_h_si$mujer_jf_h <- as.factor(train_h_si$mujer_jf_h)
-train_h_si$jf_10_18_h <- as.factor(train_h_si$jf_10_18_h)
-train_h_si$jf_19_28_h <- as.factor(train_h_si$jf_19_28_h)
-train_h_si$jf_29_59_h <- as.factor(train_h_si$jf_29_59_h)
-train_h_si$jf_60_h <- as.factor(train_h_si$jf_60_h)
-train_h_si$jf_sub <- as.factor(train_h_si$jf_sub)
+train_h_si$of_p1 <- factor(train_h_si$of_p1)
+train_h_si$of_p2 <- factor(train_h_si$of_p2)
+train_h_si$of_p3 <- factor(train_h_si$of_p3)
+train_h_si$of_p4 <- factor(train_h_si$of_p4)
+train_h_si$of_p5 <- factor(train_h_si$of_p5)
+train_h_si$of_p6 <- factor(train_h_si$of_p6)
+train_h_si$of_p7 <- factor(train_h_si$of_p7)
+train_h_si$of_p8 <- factor(train_h_si$of_p8)
+train_h_si$of_p9 <- factor(train_h_si$of_p9)
+
+train_h_si$educ_p1 <- factor(train_h_si$educ_p1)
+train_h_si$educ_p2 <- factor(train_h_si$educ_p2)
+train_h_si$educ_p3 <- factor(train_h_si$educ_p3)
+train_h_si$educ_p4 <- factor(train_h_si$educ_p4)
+train_h_si$educ_p5 <- factor(train_h_si$educ_p5)
+train_h_si$educ_p6 <- factor(train_h_si$educ_p6)
+train_h_si$educ_p7 <- factor(train_h_si$educ_p7)
+train_h_si$educ_p8 <- factor(train_h_si$educ_p8)
+train_h_si$educ_p9 <- factor(train_h_si$educ_p9)
+
+train_h_si$mujer_jf_h <- factor(train_h_si$mujer_jf_h)
+train_h_si$jf_10_18_h <- factor(train_h_si$jf_10_18_h)
+train_h_si$jf_19_28_h <- factor(train_h_si$jf_19_28_h)
+train_h_si$jf_29_59_h <- factor(train_h_si$jf_29_59_h)
+train_h_si$jf_60_h <- factor(train_h_si$jf_60_h)
+train_h_si$jf_sub <- factor(train_h_si$jf_sub, labels = c("jefe de hogar no subsidiado", "jefe de hogar subsidiado" ))
+train_h_si$pj_jf_ofhogar <- factor(train_h_si$pj_jf_ofhogar)
+train_h_si$pj_jf_sintrabajo <- factor(train_h_si$pj_jf_sintrabajo)
 
 #2.4. Guardar la base train ----   
 
@@ -496,9 +551,55 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 
 #prueba 3 de gráfica
  
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#2.7. Identificar variables importantes en modelo de clasificación---- 
+
+# Se cargan las librerías necesarias
+library(pacman)
+p_load(tidyverse, ggplot2, doParallel, rattle, MLmetrics,
+       janitor, fastDummies, tidymodels, caret)
+
+# Creamos el primer modelo
+modelo1 <- decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+
+# Dado que estos modelos son computacionalmente demandantes, vamos a distribuir los cálculos en diferentes nucleos de nuestro procesador para acelerar el proceso.
+
+# Identificamos cuántos cores tiene nuestra máquina
+n_cores <- detectCores()
+print(paste("Mi PC tiene", n_cores, "nucleos"))
 
 
+# Vamos a usar n_cores - 2 procesadores para esto
+cl <- makePSOCKcluster(n_cores - 6) 
+registerDoParallel(cl)
+
+# Se define Pobre como factor
+train_h_si$Pobre <- as.factor(train_h_si$Pobre)
+
+# Entrenamos el modelo utilizando procesamiento en paralelo
+modelo1_fit <- fit(modelo1, Pobre ~ ., data = train_h_si)
+
+# Liberamos nuestros procesadores
+stopCluster(cl)
+
+# Importancia de las variables
+importancia <- varImp(modelo1_fit$fit)
+importancia <- importancia %>%
+  data.frame() %>%
+  rownames_to_column(var = "Variable") %>%
+  mutate(Porcentaje = Overall/sum(Overall)) %>%
+  filter(Porcentaje > 0) %>%
+  arrange(desc(Porcentaje))
+
+ggplot(importancia, aes(x = Porcentaje, 
+                        y = reorder(Variable, Porcentaje))) +
+  geom_bar(stat = "identity", fill = "darkblue", alpha = 0.8) +
+  labs(y = "Variable") +
+  scale_x_continuous(labels = scales::percent) +
+  theme_classic()
+
+summary (train_h_si$P5010)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 3. PREPARACIÓN DE LA BASE DE DATOS TEST Y ESTADÍSTICAS DESCRIPTIVAS----
@@ -528,8 +629,6 @@ edad_pivot <- test_personas %>%  pivot_wider (names_from = P6050,#Parentezco con
 
 edad_pivot <- select (edad_pivot,
                                 id,
-                                Clase,
-                                Dominio,
                                 edad1,
                                 edad2,
                                 edad3,
@@ -548,8 +647,6 @@ horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050,
 
 horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
                                             id,
-                                            Clase,
-                                            Dominio,
                                             ht1,
                                             ht2,
                                             ht3,
@@ -567,8 +664,6 @@ oficio_pivot <- test_personas %>% pivot_wider(names_from = P6050,
 
 oficio_pivot <- select (oficio_pivot,
                                   id,
-                                  Clase,
-                                  Dominio,
                                   of1,
                                   of2,
                                   of3,
@@ -587,8 +682,6 @@ educ_pivot <- test_personas %>% pivot_wider(names_from = P6050,
 
 educ_pivot <- select (educ_pivot,
                                 id,
-                                Clase,
-                                Dominio,
                                 educ1,
                                 educ2,
                                 educ3,
@@ -654,7 +747,7 @@ test_personas_colaps_educ <- educ_pivot %>%
     educ_p8 = max (educ8,na.rm = TRUE),
     educ_p9 = max (educ9,na.rm = TRUE))
 
-#Nota, para revisar: ¿inner join vs left join?
+#Se hace join
 test_h0 <- 
   inner_join(test_h0, test_personas_colaps_edad,
              by = c("id"))
@@ -670,6 +763,8 @@ test_h0 <-
 test_h0 <- 
   inner_join(test_h0, test_personas_colaps_educ,
              by = c("id"))
+
+#Creación de otras variables
 
 #Creación de otras variables
 
@@ -692,12 +787,49 @@ test_personas_jf <- test_personas_jf %>% mutate(
 test_personas_jf <- test_personas_jf %>% mutate(
   jf_60_h = if_else(P6050==1 & P6040>=60, 1, 0)
 )
+
 test_personas_jf <- test_personas_jf %>% mutate(
   jf_sub = if_else(P6050==1 & P6100==3, 1, 0)
 )
 
 test_personas_jf <- test_personas_jf %>% mutate(
   jf_afiliado = if_else(P6050==1 & P6090==2 | P6090==3, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_sintrabajo = if_else(P6050==1 & P6240==2 | P6240==5, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  pj_jf_ofhogar = if_else(P6050==2 & P6240==4, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  pj_jf_sintrabajo = if_else(P6050==2 & P6240==2, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_nc_pension = if_else(P6050==1 & P6920==2, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_P7422 = if_else(P6050==1 & P7422==2, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  pj_jf_P7422 = if_else(P6050==2 & P7422==2, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  jf_P7472 = if_else(P6050==1 & P7472==2, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  pj_jf_P7472 = if_else(P6050==2 & P7472==2, 1, 0)
+)
+
+test_personas_jf <- test_personas_jf %>% mutate(
+  es_hijo = if_else(P6050==3, 1, 0)
 )
 
 test_personas_jf <- test_personas_jf %>%
@@ -709,9 +841,17 @@ test_personas_jf <- test_personas_jf %>%
     jf_29_59_h = max(jf_29_59_h),
     jf_60_h = max(jf_60_h),
     jf_sub = max(jf_sub),
-    jf_afiliado = max(jf_afiliado)
+    jf_afiliado = max(jf_afiliado),
+    jf_sintrabajo = max(jf_sintrabajo),
+    pj_jf_ofhogar = max(pj_jf_ofhogar),
+    pj_jf_sintrabajo = max(pj_jf_sintrabajo),
+    jf_nc_pension = max(jf_nc_pension),
+    jf_P7422 = max(jf_P7422),
+    pj_jf_P7422 = max(pj_jf_P7422),
+    jf_P7472 = max(jf_P7472),
+    pj_jf_P7472 = max(pj_jf_P7472),
+    hijos = sum(es_hijo)
   )
-
 
 test_h0 <- 
   inner_join(test_h0, test_personas_jf,
@@ -728,7 +868,7 @@ porcentaje_na <- cantidad_na/nrow(test_h)
 # Porcentaje de observaciones faltantes. 
 p <- mean(porcentaje_na[,1])
 print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 4.17% de las entradas están vacías"
+#En promedio el 8.3 % de las entradas están vacías"
 
 #Se visualiza el porcentaje de observaciones faltantes por variable
 
@@ -764,7 +904,16 @@ ggplot(porcentaje_na[1:nrow(porcentaje_na),],
   scale_x_continuous(labels = scales::percent, limits = c(0, 1))
 
 # Prueba borrado manual--- ajustar o borrar
-vars_drop <- c("P5100", "P5140", "P5130", "jf_afiliado")
+vars_drop <- c("P5100", 
+               "jf_P7422",
+               "jf_P7472",
+               "P5140", 
+               "pj_jf_P7422",
+               "P5130",
+               "jf_afiliado",
+               "jf_sintrabajo",
+               "pj_jf_P7472",
+               "jf_nc_pension")
 test_h_si <- test_h[,!(names(test_h) %in% vars_drop)]
 k0 <- ncol(test_h)
 k1 <- ncol(test_h_si)
@@ -773,40 +922,47 @@ print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "colu
 #se crea test hogares borrando las filas de ht_p1 que están con NA
 
 test_h_si <- test_h_si %>% filter(!is.na(jf_sub))#pasa de 66168 a 62479 obs
+test_h_si <- test_h_si [is.finite(test_h_si$ht_p1), ] #pasa de 62479 a 59307 obs
+test_h_si <- test_h_si %>% filter(!is.na(pj_jf_ofhogar)) #pasa de 59307 a 59298 obs
+test_h_si <- test_h_si %>% filter(!is.na(pj_jf_sintrabajo)) #pasa de 59298 a 59298 obs
+
 
 #3.3. Convertir en factor variables de base test ---- 
 
-test_h_si$P5000 <- as.factor(test_h_si$P5000)
-test_h_si$P5010 <- as.factor(test_h_si$P5010)
-test_h_si$P5090 <- as.factor(test_h_si$P5090)
-test_h_si$Depto <- as.factor(test_h_si$Depto)
+test_h_si$P5000 <- factor(test_h_si$P5000)
+test_h_si$P5010 <- factor(test_h_si$P5010)
+test_h_si$P5090 <- factor(test_h_si$P5090)
+test_h_si$Depto <- factor(test_h_si$Depto)
 
-test_h_si$of_p1 <- as.factor(test_h_si$of_p1)
-test_h_si$of_p2 <- as.factor(test_h_si$of_p2)
-test_h_si$of_p3 <- as.factor(test_h_si$of_p3)
-test_h_si$of_p4 <- as.factor(test_h_si$of_p4)
-test_h_si$of_p5 <- as.factor(test_h_si$of_p5)
-test_h_si$of_p6 <- as.factor(test_h_si$of_p6)
-test_h_si$of_p7 <- as.factor(test_h_si$of_p7)
-test_h_si$of_p8 <- as.factor(test_h_si$of_p8)
-test_h_si$of_p9 <- as.factor(test_h_si$of_p9)
+test_h_si$of_p1 <- factor(test_h_si$of_p1)
+test_h_si$of_p2 <- factor(test_h_si$of_p2)
+test_h_si$of_p3 <- factor(test_h_si$of_p3)
+test_h_si$of_p4 <- factor(test_h_si$of_p4)
+test_h_si$of_p5 <- factor(test_h_si$of_p5)
+test_h_si$of_p6 <- factor(test_h_si$of_p6)
+test_h_si$of_p7 <- factor(test_h_si$of_p7)
+test_h_si$of_p8 <- factor(test_h_si$of_p8)
+test_h_si$of_p9 <- factor(test_h_si$of_p9)
 
-test_h_si$educ_p1 <- as.factor(test_h_si$educ_p1)
-test_h_si$educ_p2 <- as.factor(test_h_si$educ_p2)
-test_h_si$educ_p3 <- as.factor(test_h_si$educ_p3)
-test_h_si$educ_p4 <- as.factor(test_h_si$educ_p4)
-test_h_si$educ_p5 <- as.factor(test_h_si$educ_p5)
-test_h_si$educ_p6 <- as.factor(test_h_si$educ_p6)
-test_h_si$educ_p7 <- as.factor(test_h_si$educ_p7)
-test_h_si$educ_p8 <- as.factor(test_h_si$educ_p8)
-test_h_si$educ_p9 <- as.factor(test_h_si$educ_p9)
+test_h_si$educ_p1 <- factor(test_h_si$educ_p1)
+test_h_si$educ_p2 <- factor(test_h_si$educ_p2)
+test_h_si$educ_p3 <- factor(test_h_si$educ_p3)
+test_h_si$educ_p4 <- factor(test_h_si$educ_p4)
+test_h_si$educ_p5 <- factor(test_h_si$educ_p5)
+test_h_si$educ_p6 <- factor(test_h_si$educ_p6)
+test_h_si$educ_p7 <- factor(test_h_si$educ_p7)
+test_h_si$educ_p8 <- factor(test_h_si$educ_p8)
+test_h_si$educ_p9 <- factor(test_h_si$educ_p9)
 
-test_h_si$mujer_jf_h <- as.factor(test_h_si$mujer_jf_h)
-test_h_si$jf_10_18_h <- as.factor(test_h_si$jf_10_18_h)
-test_h_si$jf_19_28_h <- as.factor(test_h_si$jf_19_28_h)
-test_h_si$jf_29_59_h <- as.factor(test_h_si$jf_29_59_h)
-test_h_si$jf_60_h <- as.factor(test_h_si$jf_60_h)
-test_h_si$jf_sub <- as.factor(test_h_si$jf_sub)
+test_h_si$mujer_jf_h <- factor(test_h_si$mujer_jf_h)
+test_h_si$jf_10_18_h <- factor(test_h_si$jf_10_18_h)
+test_h_si$jf_19_28_h <- factor(test_h_si$jf_19_28_h)
+test_h_si$jf_29_59_h <- factor(test_h_si$jf_29_59_h)
+test_h_si$jf_60_h <- factor(test_h_si$jf_60_h)
+test_h_si$jf_sub <- factor(test_h_si$jf_sub)
+test_h_si$pj_jf_ofhogar <- factor(test_h_si$pj_jf_ofhogar)
+test_h_si$pj_jf_sintrabajo <- factor(test_h_si$pj_jf_sintrabajo)
+
 
 #3.4. Guardar la base test ----   
 
