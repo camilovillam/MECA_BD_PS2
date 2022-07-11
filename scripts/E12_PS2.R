@@ -37,12 +37,27 @@ library(caret)
 library(arsenal)
 library(janitor)
 require(pacman)
-p_load(rio, 
-       tidyverse, 
+p_load(rio,
+       doParallel,
+       stargazer,
+       fabricatr,
+       tableone,
+       arsenal,
+       janitor,
+       tidyverse,
+       gamlr,
        skimr, 
        caret,
        rvest,
-       stargazer)
+       stargazer,
+       smotefamily,
+       MASS,
+       ROCR,
+       pROC,
+       rpart,
+       rpart.plot,
+       glmnet,
+       xgboost)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
@@ -321,13 +336,114 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-#3.1. ----
+#3.1. Carga de la base de datos----
+
+#se carga la base ajustada
+setwd("~/GitHub/MECA_BD_PS2")
+train_h <-readRDS("./stores/train_h_si.rds")
+
+#se crea la variable logaritmo de ingresos
+train_h$ln_ing <- log(train_h$Ingtotug)
+train_h <- train_h %>% mutate (edadjf_cua= edad_p1*edad_p1)
+
+#NOTA: Se eliminan las filas  que tienen Inf de la variable ln_ing (revisar cuando se termine el P2)
+train_h <- train_h[is.finite(train_h$ln_ing), ]
+
+##3.2. Partición de la base de datos en tres----
+
+#La base de datos Train se divide en tres particiones:
+# Tr_train: Entrenar el modelo
+# Tr_eval: Evaluar, ajustar y refinar el modelo
+# Tr_test: Probar el modelo
+
+#Balance inicial
+prop.table(table(train_h$Pobre))
+
+#Generamos las particiones
+set.seed(100)
+split1 <- createDataPartition(train_h$Pobre, p = .7)[[1]]
+length(split1) # Base de 103052
+
+other <- train_h[-split1,]
+Tr_train <- train_h[split1,]
+
+split2 <- createDataPartition(other$Pobre, p = 1/3)[[1]]
+
+Tr_eval <- other[ split2,]
+Tr_test <- other[-split2,]
+
+#3.3. Prueba modelo de regresión
+
+require("stargazer")
+
+# modelo1 <- as.formula (Ingtotug ~ Dominio+
+#                          mujer_jf_h+
+#                          edad_p1+
+#                          edad_p2+
+#                          edad_p3+
+#                          edad_p4+
+#                          edad_p5+
+#                          edadjf_cua+
+#                          ht_p1+
+#                          ht_p2+
+#                          ht_p3+
+#                          of_p1+
+#                          of_p3+
+#                          hijos+
+#                          pj_jf_sintrabajo+
+#                          P5000+
+#                          P5010+
+#                          P5090+
+#                          educ_p1+
+#                          educ_p2+
+#                          educ_p3+
+#                          Npersug+
+#                          jf_sub)
+
+reg1<-lm(modelo1,Tr_train)
+stargazer(reg1,type="text")
+
+#3.4. Prueba estimación MSE
+
+modelo_estimado <- train(modelo1,
+                         data = Tr_train,
+                         trControl=trainControl(method="cv",number=5),
+                         method="lm")
 
 
+modelo_predicho <- predict(modelo_estimado,newdata = Tr_test )
 
-#3.2. ----
 
+#Cálculo del MSE:
+ MSE_modelo1 <- with (Tr_test,mean((Ingtotug - modelo_predicho^2)))
+ 
+#Guardar resultado de logaritmo de ingreso en la base
+# Tr_test$log_y <- modelo_predicho
 
+#Pasar el logaitmo del ingreso a ingreso con exponencial en la misma base
+ Tr_test$y <- modelo_predicho 
+ #Tr_test$y <- exp(Tr_test$log_y)
+
+ #Determinar si es pobre o no
+ 
+ Tr_test$pobre_clas_ing <- factor(if_else( Tr_test$y < Tr_test$Lp, "Pobre", "No Pobre"))
+ 
+ summary(Tr_test$pobre_clas_ing)
+ 
+ confusionMatrix(data=Tr_test$pobre_clas_ing, 
+                                 reference=Tr_test$Pobre , 
+                                 mode="sens_spec" , positive="Pobre")
+ 
+ 
+ ## ROC
+ 
+ pred_m1 <- prediction(Tr_test$pobre_clas_ing, Tr_test$Pobre)
+ 
+ roc_ROCRm1 <- performance(pred_m1,"tpr","fpr")
+ 
+ plot(roc_ROCRm1, main = "ROC curve", colorize = FALSE, col="blue")
+ 
+ abline(a = 0, b = 1)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
