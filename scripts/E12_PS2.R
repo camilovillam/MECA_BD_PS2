@@ -483,7 +483,7 @@ train_h_si$jf_29_59_h <- factor(train_h_si$jf_29_59_h)
 train_h_si$jf_60_h <- factor(train_h_si$jf_60_h)
 train_h_si$jf_sub <- factor(train_h_si$jf_sub, labels = c("jefe de hogar no subsidiado", "jefe de hogar subsidiado" ))
 train_h_si$pj_jf_ofhogar <- factor(train_h_si$pj_jf_ofhogar)
-train_h_si$pj_jf_sintrabajo <- factor(train_h_si$pj_jf_sintrabajo)
+train_h_si$pj_jf_sintrabajo <- factor(train_h_si$pj_jf_sintrabajo, labels = c("Pareja Sin Trabajo", "Pareja Con Trabajo"))
 
 #2.4. Guardar la base train ----   
 
@@ -550,9 +550,21 @@ boxplot(train_h$Ingtotug,main = "Boxplot Ingreso total", xlab = "Ingreso total",
 boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Horas Trabajadas", col = "skyblue4")
 
 #prueba 3 de gráfica
-ggplot(train_h_si, aes(x=mujer_jf_h,fill=Pobre)) + 
+train_h_si_rows <- nrow(train_h_si)
+
+ggplot(train_h_si, aes(x=mujer_jf_h,fill=Pobre)) +
+  scale_y_continuous(labels = function(x) paste0(round((x*100)/train_h_si_rows, 2), "%")) +
   geom_bar(stat='count', position=position_dodge()) + 
   labs(x='Género', y='Cantidad') +
+  theme_minimal() +
+  scale_fill_brewer(palette="Blues")
+
+# juntar graficas
+
+ggplot(train_h_si, aes(x=pj_jf_sintrabajo,fill=Pobre)) +
+  scale_y_continuous(labels = function(x) paste0(round((x*100)/train_h_si_rows, 2), "%")) +
+  geom_bar(stat='count', position=position_dodge()) + 
+  labs(x='Estado Laboral Pareja Jefe Hogar', y='Cantidad') +
   theme_minimal() +
   scale_fill_brewer(palette="Blues")
  
