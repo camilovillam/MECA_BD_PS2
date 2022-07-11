@@ -476,7 +476,7 @@ train_h_si$educ_p7 <- factor(train_h_si$educ_p7)
 train_h_si$educ_p8 <- factor(train_h_si$educ_p8)
 train_h_si$educ_p9 <- factor(train_h_si$educ_p9)
 
-train_h_si$mujer_jf_h <- factor(train_h_si$mujer_jf_h)
+train_h_si$mujer_jf_h <- factor(train_h_si$mujer_jf_h, labels = c("Hombre Jefe de hogar", "Mujer Jefe de Hogar"))
 train_h_si$jf_10_18_h <- factor(train_h_si$jf_10_18_h)
 train_h_si$jf_19_28_h <- factor(train_h_si$jf_19_28_h)
 train_h_si$jf_29_59_h <- factor(train_h_si$jf_29_59_h)
@@ -537,9 +537,9 @@ train_h_si %>%
 #2.6. Gráficas para el análisis de datos---- 
 
 #prueba 1 de gráfica
-ggplot(train_h_si, aes(x=, y=Ingtotug,color=mujer_jf_h)) + 
+ggplot(train_h_si, aes(x=ht_p1, y=Ingtotug,color=mujer_jf_h)) + 
   geom_point(aes(color=factor(Pobre))) +
-  labs(x='horas trabajadas', y='Ingreso total', title='horas trabajdas vs. ingreso total')
+  labs(x='Horas trabajadas Jefe Hogar', y='Ingreso total')
 
 #prueba 2 de gráfica
 Conf2x2 = matrix(c(2:2), nrow=4, byrow=FALSE)
@@ -550,6 +550,11 @@ boxplot(train_h$Ingtotug,main = "Boxplot Ingreso total", xlab = "Ingreso total",
 boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Horas Trabajadas", col = "skyblue4")
 
 #prueba 3 de gráfica
+ggplot(train_h_si, aes(x=mujer_jf_h,fill=Pobre)) + 
+  geom_bar(stat='count', position=position_dodge()) + 
+  labs(x='Género', y='Cantidad') +
+  theme_minimal() +
+  scale_fill_brewer(palette="Blues")
  
 #2.7. Identificar variables importantes en modelo de clasificación---- 
 
