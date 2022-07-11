@@ -863,6 +863,7 @@ grid_default <- expand.grid(nrounds = c(250,500),
                             min_child_weight = c(10, 25,50),
                             colsample_bytree = c(0.7),
                             subsample = c(0.6))
+gc()
 
 xgboost <- train(
   form_xgboost,
@@ -874,6 +875,9 @@ xgboost <- train(
   preProcess = c("center", "scale")
 )
 
+
+gc()
+
 xgboost_downs <- train(
   form_xgboost,
   data = downSampledTrain,
@@ -883,6 +887,9 @@ xgboost_downs <- train(
   tuneGrid = grid_default,
   preProcess = c("center", "scale")
 )
+
+
+gc()
 
 xgboost_ups <- train(
   form_xgboost,
