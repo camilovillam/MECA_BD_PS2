@@ -552,21 +552,33 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 #prueba 3 de gráfica
 train_h_si_rows <- nrow(train_h_si)
 
-ggplot(train_h_si, aes(x=mujer_jf_h,fill=Pobre)) +
+grafica_3 <- 
+  ggplot(train_h_si, aes(x=mujer_jf_h,fill=Pobre)) +
   scale_y_continuous(labels = function(x) paste0(round((x*100)/train_h_si_rows, 2), "%")) +
   geom_bar(stat='count', position=position_dodge()) + 
   labs(x='Género', y='Cantidad') +
   theme_minimal() +
   scale_fill_brewer(palette="Blues")
 
-# juntar graficas
-
-ggplot(train_h_si, aes(x=pj_jf_sintrabajo,fill=Pobre)) +
+#prueba 4 de gráfica
+grafica_4 <- 
+  ggplot(train_h_si, aes(x=pj_jf_sintrabajo,fill=Pobre)) +
   scale_y_continuous(labels = function(x) paste0(round((x*100)/train_h_si_rows, 2), "%")) +
   geom_bar(stat='count', position=position_dodge()) + 
   labs(x='Estado Laboral Pareja Jefe Hogar', y='Cantidad') +
   theme_minimal() +
   scale_fill_brewer(palette="Blues")
+
+# juntar graficas 3 y 4
+install.packages("ggpubr")
+library(ggplot2)
+library(ggpubr)
+
+figuras_3_y_4 <- ggarrange(grafica_3, grafica_4,
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
+# Ver figura
+figuras_3_y_4
  
 #2.7. Identificar variables importantes en modelo de clasificación---- 
 
