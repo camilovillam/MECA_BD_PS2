@@ -394,6 +394,7 @@ print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "colu
 #se crea train hogares borrando las filas de ht_p1 que están con NA
 
 train_h_si <- train_h_si %>% filter(!is.na(jf_sub))#pasa de 164960 a 155089 obs
+train_h_si <- train_h_si [is.finite(train_h_si$ht_p1), ] #pasa de 155089 a 147231 obs
 
 #2.3. Convertir en factor variables de base train ---- 
 
@@ -438,22 +439,51 @@ saveRDS(train_h_si,"./stores/train_h_si.rds")
 
 #2.5. Tablas descriptivas ---- 
 
+#se carga la base ajustada
+setwd("~/GitHub/MECA_BD_PS2")
+train_h_si <-readRDS("./stores/train_h_si.rds")
+
+#se instala y se carga el paquete de tablas lindas
 install.packages("gtsummary")
 require ("gtsummary") #buen paquete para tablas descriptivas
+require("haven")
+train_h_si <- zap_labels(train_h_si)
 
-tbl_summary(train_h_si)
 
+#Tabla de Pobre versus Dominio
+train_h_si %>%
+  select(Dominio, Pobre) %>%
+  tbl_summary(by=Pobre) %>%
+  add_overall() %>%
+  add_n()
 
-## Save to a CSV file
-#setwd("~/GitHub/MECA_BD_PS2")
-#write.csv(Tabla_descr_csv, file = "./views/tabla_descr.csv")
+#Tabla de Pobre versus mujer_jf_h
+train_h_si %>%
+  select(mujer_jf_h, Pobre) %>%
+  tbl_summary(by=Pobre) %>%
+  add_overall() %>%
+  add_n()
+
+#Tabla de Pobre versus mujer_jf_h
+train_h_si %>%
+  select(jf_10_18_h, jf_19_28_h, jf_29_59_h, jf_60_h, Pobre) %>%
+  tbl_summary(by=Pobre) %>%
+  add_overall() %>%
+  add_n()
+
+#Tabla de P5000, P5010, P5090, Pobre
+train_h_si %>%
+  select(P5000, P5010, P5090, Pobre) %>%
+  tbl_summary(by=Pobre) %>%
+  add_overall() %>%
+  add_n()
 
 
 #2.6. Gráficas para el análisis de datos---- 
 
 #prueba 1 de gráfica
-ggplot(train_h, aes(x=horas_trabajadas, y=Ingtotug,color=mujer_jf_h)) + 
-  geom_point(aes(color=factor(mujer_jf_h))) +
+ggplot(train_h_si, aes(x=, y=Ingtotug,color=mujer_jf_h)) + 
+  geom_point(aes(color=factor(Pobre))) +
   labs(x='horas trabajadas', y='Ingreso total', title='horas trabajdas vs. ingreso total')
 
 #prueba 2 de gráfica
@@ -465,7 +495,7 @@ boxplot(train_h$Ingtotug,main = "Boxplot Ingreso total", xlab = "Ingreso total",
 boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Horas Trabajadas", col = "skyblue4")
 
 #prueba 3 de gráfica
-
+ 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
