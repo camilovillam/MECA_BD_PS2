@@ -651,7 +651,7 @@ confusionMatrix(data=Tr_test$caret_logit_hat_def_rfThresh,
                 mode="sens_spec" , positive="Pobre")
 
 
-
+fmodelo5
 
 
 ## 2.3. Rebalanceo de clases, remuestreo ----
@@ -775,12 +775,6 @@ confmat_mod_sel_ups
 confmat_mod_sel_downs
 
 #Optimal Cut off
-
-
-
-
-
-
 
 ##2.4. Model Tunning con Caret ----
 
