@@ -70,6 +70,7 @@ p_load(rio,
        rvest,
        stargazer,
        smotefamily,
+       MASS,
        ROCR,
        pROC,
        rpart,
@@ -356,15 +357,15 @@ gc()
 setwd("~/GitHub/MECA_BD_PS2")
 train_h <-readRDS("./stores/train_h_si.rds")
 
-train_h$Pobre <- factor(train_h$Pobre,levels=c("0","1"),labels=c("No_pobre","Pobre"))
+train_h$Pobre <- factor(train_h$Pobre,levels=c("No Pobre","Pobre"),labels=c("No_pobre","Pobre"))
 # train_h$P5000 <- factor(train_h$P5000)
 # train_h$P5090 <- factor(train_h$P5090)
 
 
 #TEMPORAL: ELIMINAR 98 y 16
-nrow(train_h)
-train_h <- train_h[!(train_h$P5000=="98" | train_h$P5000=="16"),]
-nrow(train_h)
+#nrow(train_h)
+#train_h <- train_h[!(train_h$P5000=="98" | train_h$P5000=="16"),]
+#nrow(train_h)
 
 
 #Temporal, eliminar todos los NA
@@ -402,72 +403,255 @@ prop.table(table(Tr_train$Pobre))
 prop.table(table(Tr_eval$Pobre))
 prop.table(table(Tr_test$Pobre))
 
+nrow(Tr_train)
+nrow(Tr_test)
 
-## 2.2. Modelos con diferentes variables: 
+rm(other)
 
-# modelo1
-# modelo2
-# modelo3
-# modelo4
-# modelo5
+
+## 2.2. Modelos sencillos Logit ----
+# Se ensayan 5 modelos diferentes con distintas variables, como una primera
+# aproximación.
+# Más adelante se introducen más variaciones y métodos
+# sobre los mejores modelos.
 
 colnames(train_h)
 
-## 2.2. Modelo sencillo Logit ----
-
 #Se guarda la fórmula del modelo
-form_logit_1 <- as.formula("Pobre ~ Npersug + factor(mujer_jf_h)")
 
-form_logit_1 <- as.formula("Pobre ~ Npersug + factor(P5090)")
+# form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + edad_p1 + 
+#                            mujer_jf_h + educ_p1 + ht_p1 + jf_sub")
 
-form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000")
+fmodelo1 <- as.formula("Pobre ~ jf_sub + educ_p3 + Clase + P5000 + ht_p1")
+fmodelo2 <- as.formula("Pobre ~ jf_sub + hijos + P5000 + Npersug")
+fmodelo3 <- as.formula("Pobre ~ jf_sub + educ_p3 + hijos + pj_jf_sintrabajo")
+fmodelo4 <- as.formula("Pobre ~ jf_sub + educ_p3 + hijos + pj_jf_sintrabajo + P5090")
+fmodelo5 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + edad_p1 + mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + hijos + ht_p1 + pj_jf_sintrabajo")
 
-form_logit_1 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + edad_p1 + 
-                           mujer_jf_h + educ_p1 + ht_p1 + jf_sub")
 
 
 #Se estima el modelo Logit
-mod_logit_1 <-  glm(form_logit_1,
-                    data= Tr_train,
-                    family=binomial(link="logit"))
+#mod_logit_1 <-  glm(form_logit_1,data= Tr_train, family=binomial(link="logit"))
+
+mod_logit_1 <-  glm(fmodelo1,data= Tr_train, family=binomial(link="logit"))
+mod_logit_2 <-  glm(fmodelo2,data= Tr_train, family=binomial(link="logit"))
+mod_logit_3 <-  glm(fmodelo3,data= Tr_train, family=binomial(link="logit"))
+mod_logit_4 <-  glm(fmodelo4,data= Tr_train, family=binomial(link="logit"))
+mod_logit_5 <-  glm(fmodelo5,data= Tr_train, family=binomial(link="logit"))
 
 stargazer(mod_logit_1, type="text")
-summary(mod_logit_1 ,type="text")
+stargazer(mod_logit_2, type="text")
+stargazer(mod_logit_3, type="text")
+stargazer(mod_logit_4, type="text")
+stargazer(mod_logit_5, type="text")
 
-  #TEMPORAL:
+summary(mod_logit_1, type="text")
+summary(mod_logit_2, type="text")
+summary(mod_logit_3, type="text")
+summary(mod_logit_4, type="text")
+summary(mod_logit_5, type="text")
+
+#TEMPORAL:
 Tr_test <- Tr_test[!(Tr_test$P5000=="98" | Tr_test$P5000=="16"),]
 
 
 ## Predicción Pobre sobre la base de Test
-Tr_test$predict_logit <- predict(mod_logit_1, Tr_test, type="response")
+Tr_test$predict_logit_1 <- predict(mod_logit_1, Tr_test, type="response")
+Tr_test$predict_logit_2 <- predict(mod_logit_2, Tr_test, type="response")
+Tr_test$predict_logit_3 <- predict(mod_logit_3, Tr_test, type="response")
+Tr_test$predict_logit_4 <- predict(mod_logit_4, Tr_test, type="response")
+Tr_test$predict_logit_5 <- predict(mod_logit_5, Tr_test, type="response")
+
 
 ## Se hace un gráfico de cajas y bigotes para explorar el punto de corte
-ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit)) + 
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_1)) + 
+  geom_boxplot(aes(fill=Pobre)) + theme_test()
+
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_2)) + 
+  geom_boxplot(aes(fill=Pobre)) + theme_test()
+
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_3)) + 
+  geom_boxplot(aes(fill=Pobre)) + theme_test()
+
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_4)) + 
+  geom_boxplot(aes(fill=Pobre)) + theme_test()
+
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_5)) + 
   geom_boxplot(aes(fill=Pobre)) + theme_test()
 
 #Se agrega el resultado de la predicción según la probabilidad de Logit
+#Con regla "boba" de Bayes
+
 Tr_test <- Tr_test %>% 
-  mutate(p_logit=ifelse(predict_logit<0.2,0,1) %>% 
+  mutate(p_logit_1 = ifelse(predict_logit_1 < 0.2,0,1) %>% 
            factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
+Tr_test <- Tr_test %>% 
+  mutate(p_logit_2 = ifelse(predict_logit_2 < 0.2,0,1) %>% 
+           factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
+
+Tr_test <- Tr_test %>% 
+  mutate(p_logit_3 = ifelse(predict_logit_3 < 0.2,0,1) %>% 
+           factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
+
+Tr_test <- Tr_test %>% 
+  mutate(p_logit_4 = ifelse(predict_logit_4 < 0.2,0,1) %>% 
+           factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
+
+Tr_test <- Tr_test %>% 
+  mutate(p_logit_5 = ifelse(predict_logit_5 < 0.2,0,1) %>% 
+           factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
 #Métricas de resultados:
 
-## Matriz de confusión
-confusionMatrix(data=Tr_test$p_logit, 
+## Matrices de confusión
+
+confmat_lg_1 <- confusionMatrix(data=Tr_test$p_logit_1, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-## ROC
-pred <- prediction(Tr_test$predict_logit, Tr_test$Pobre)
-roc_ROCR <- performance(pred,"tpr","fpr")
+confmat_lg_2 <- confusionMatrix(data=Tr_test$p_logit_2, 
+                                reference=Tr_test$Pobre , 
+                                mode="sens_spec" , positive="Pobre")
 
-plot(roc_ROCR, main = "ROC curve", colorize = T)
+confmat_lg_3 <- confusionMatrix(data=Tr_test$p_logit_3, 
+                                reference=Tr_test$Pobre , 
+                                mode="sens_spec" , positive="Pobre")
+
+confmat_lg_4 <- confusionMatrix(data=Tr_test$p_logit_4, 
+                                reference=Tr_test$Pobre , 
+                                mode="sens_spec" , positive="Pobre")
+
+confmat_lg_5 <- confusionMatrix(data=Tr_test$p_logit_5, 
+                                reference=Tr_test$Pobre , 
+                                mode="sens_spec" , positive="Pobre")
+
+confmat_lg_1
+confmat_lg_2
+confmat_lg_3
+confmat_lg_4
+confmat_lg_5
+
+
+## ROC
+pred_lg_1 <- prediction(Tr_test$predict_logit_1, Tr_test$Pobre)
+pred_lg_2 <- prediction(Tr_test$predict_logit_2, Tr_test$Pobre)
+pred_lg_3 <- prediction(Tr_test$predict_logit_3, Tr_test$Pobre)
+pred_lg_4 <- prediction(Tr_test$predict_logit_4, Tr_test$Pobre)
+pred_lg_5 <- prediction(Tr_test$predict_logit_5, Tr_test$Pobre)
+
+roc_ROCR_lg_1 <- performance(pred_lg_1,"tpr","fpr")
+roc_ROCR_lg_2 <- performance(pred_lg_2,"tpr","fpr")
+roc_ROCR_lg_3 <- performance(pred_lg_3,"tpr","fpr")
+roc_ROCR_lg_4 <- performance(pred_lg_4,"tpr","fpr")
+roc_ROCR_lg_5 <- performance(pred_lg_5,"tpr","fpr")
+
+plot(roc_ROCR_lg_1, main = "ROC curve", colorize = FALSE, col="black")
+plot(roc_ROCR_lg_2, main = "ROC curve", add=TRUE, colorize = FALSE, col="blue")
+plot(roc_ROCR_lg_3, main = "ROC curve", add=TRUE, colorize = FALSE, col="green")
+plot(roc_ROCR_lg_4, main = "ROC curve", add=TRUE, colorize = FALSE, col="red")
+plot(roc_ROCR_lg_5, main = "ROC curve", add=TRUE, colorize = FALSE, col="yellow")
 abline(a = 0, b = 1)
 
+
 ## AUC
-auc_roc = performance(pred, measure = "auc")
-auc_roc@y.values[[1]]
+auc_roc_lg_1  <-  performance(pred_lg_1, measure = "auc")
+auc_roc_lg_2  <-  performance(pred_lg_2, measure = "auc")
+auc_roc_lg_3  <-  performance(pred_lg_3, measure = "auc")
+auc_roc_lg_4  <-  performance(pred_lg_4, measure = "auc")
+auc_roc_lg_5  <-  performance(pred_lg_5, measure = "auc")
+
+auc_roc_lg_1@y.values[[1]]
+auc_roc_lg_2@y.values[[1]]
+auc_roc_lg_3@y.values[[1]]
+auc_roc_lg_4@y.values[[1]]
+auc_roc_lg_5@y.values[[1]]
+
+
+
+## Validación cruzada K-Fold:
+
+#Modelo_seleccionado:
+fmodelo_sel <- fmodelo5
+modelo_sel <- mod_logit_5
+
+
+#Definición del control (a usarse en los demás modelos)
+fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
+
+control <- trainControl(method = "cv", number = 5,
+                        summaryFunction = fiveStats, 
+                        classProbs = TRUE,
+                        verbose=FALSE,
+                        savePredictions = T)
+
+## Entrenar el modelo
+caret_logit  <-  train(fmodelo_sel,
+                       data=Tr_train,
+                       method="glm",
+                       trControl = control,
+                       family = "binomial",
+                       preProcess = c("center", "scale"))
+caret_logit
+
+## predict
+Tr_test$p_caret <- predict(caret_logit , Tr_test , type="prob")[2]
+
+## ROC
+pred_cv <- prediction(Tr_test$p_caret , Tr_test$Pobre)
+
+roc_ROCR_cv <- performance(pred_cv,"tpr","fpr")
+
+plot(roc_ROCR_cv, main = "ROC curve", add=TRUE, colorize = FALSE, col="blue")
+
+auc_roc_cv = performance(pred_cv, measure = "auc")
+auc_roc_cv@y.values[[1]]
+
+
+
+## Punto de corte óptimo:
+
+evalResults <- data.frame(Pobre = Tr_eval$Pobre)
+
+
+evalResults$Roc <- predict(caret_logit, newdata = Tr_eval,
+                           type = "prob")[,2] ##OJO!!! ¿1 o 2?
+
+
+rfROC <- roc(evalResults$Pobre, evalResults$Roc, levels = rev(levels(evalResults$Pobre)))
+rfROC
+
+rfThresh <- coords(rfROC, x = "best", best.method = "closest.topleft")
+rfThresh
+
+
+evalResults <- evalResults %>% 
+  mutate(hat_def_05=ifelse(evalResults$Roc < 0.5,"No_pobre","Pobre"),
+         hat_def_rfThresh=ifelse(evalResults$Roc < rfThresh$threshold,"No_pobre","Pobre"))
+
+with(evalResults,table(Pobre,hat_def_05))
+with(evalResults,table(Pobre,hat_def_rfThresh))
+
+#Ahora en Test con el cut off óptimo:
+
+Tr_test$caret_logit_roc <- predict(caret_logit, newdata = Tr_test,
+                           type = "prob")[,2] ##OJO!!! ¿1 o 2?
+
+
+Tr_test <- Tr_test %>% 
+  mutate(caret_logit_hat_def_05=ifelse(Tr_test$caret_logit_roc < 0.5,"No_pobre","Pobre"),
+         caret_logit_hat_def_rfThresh=ifelse(Tr_test$caret_logit_roc < rfThresh$threshold,"No_pobre","Pobre"))
+
+Tr_test$caret_logit_hat_def_05 <- factor(Tr_test$caret_logit_hat_def_05)
+Tr_test$caret_logit_hat_def_rfThresh <- factor(Tr_test$caret_logit_hat_def_rfThresh)
+
+## Matriz de confusión
+confusionMatrix(data=Tr_test$caret_logit_hat_def_rfThresh, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+
+
+
 
 
 ## 2.3. Rebalanceo de clases, remuestreo ----
@@ -510,15 +694,14 @@ prop.table(table(downSampledTrain$Pobre))
 
 #Automatizar esto con tratamiento de cadenas de caracteres
 
-
-form_logit_1
+modelo_sel
 
 predictors <-c ("Npersug","P5090","P5000","edad_p1","mujer_jf_h","educ_p1","ht_p1","jf_sub")
 head(Tr_train[predictors])
 
 
 #Vuelvo dummies los factores
-trainX <- data.frame(model.matrix(form_logit_1,data=Tr_train))[-1]
+trainX <- data.frame(model.matrix(modelo_sel,data=Tr_train))[-1]
 
 smote_output = SMOTE(X = trainX,
                      target = Tr_train$Pobre)
@@ -547,6 +730,56 @@ prop.table(table(smotedTrain$class))
 #Con SMOTE cambia la estructura de la base, ojo.
 
 
+#Corro el logit básico con UpSample y DownSample:
+
+modelo_sel_ups <-  glm(fmodelo_sel,data= upSampledTrain, family=binomial(link="logit"))
+modelo_sel_downs <-  glm(fmodelo_sel,data= downSampledTrain, family=binomial(link="logit"))
+
+stargazer(modelo_sel_ups, type="text")
+stargazer(modelo_sel_downs, type="text")
+
+
+#TEMPORAL:
+#Tr_test <- Tr_test[!(Tr_test$P5000=="98" | Tr_test$P5000=="16"),]
+Tr_test <- Tr_test[!(Tr_test$P5000=="12"),]
+
+Tr_test$predict_logit_ups <- predict(modelo_sel_ups, Tr_test, type="response")
+Tr_test$predict_logit_downs <- predict(modelo_sel_downs, Tr_test, type="response")
+
+
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_ups)) + 
+  geom_boxplot(aes(fill=Pobre)) + theme_test()
+
+ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_downs)) + 
+  geom_boxplot(aes(fill=Pobre)) + theme_test()
+
+
+Tr_test <- Tr_test %>% 
+  mutate(p_logit_mod_sel_ups = ifelse(predict_logit_ups < 0.5,0,1) %>% 
+           factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
+
+Tr_test <- Tr_test %>% 
+  mutate(p_logit_mod_sel_downs = ifelse(predict_logit_downs < 0.5,0,1) %>% 
+           factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
+
+
+confmat_mod_sel_ups <- confusionMatrix(data=Tr_test$p_logit_mod_sel_ups, 
+                                reference=Tr_test$Pobre , 
+                                mode="sens_spec" , positive="Pobre")
+
+confmat_mod_sel_downs <- confusionMatrix(data=Tr_test$p_logit_mod_sel_downs, 
+                                       reference=Tr_test$Pobre , 
+                                       mode="sens_spec" , positive="Pobre")
+
+confmat_mod_sel_ups
+confmat_mod_sel_downs
+
+#Optimal Cut off
+
+
+
+
+
 
 
 ##2.4. Model Tunning con Caret ----
@@ -561,7 +794,7 @@ control <- trainControl(method = "cv", number = 5,
                         savePredictions = T)
 
 ## Entrenar el modelo
-caret_logit  <-  train(form_logit_1,
+caret_logit  <-  train(fmodelo_sel,
                     data=Tr_train,
                     method="glm",
                     trControl = control,
@@ -570,14 +803,14 @@ caret_logit  <-  train(form_logit_1,
 caret_logit
 
 ## predict
-Tr_test$p_caret <- predict(caret_logit , Tr_test , type="prob")[2]
+Tr_test$p_caret <- predict(caret_logit, Tr_test , type="prob")[2]
 
 ## ROC
 pred_cv <- prediction(Tr_test$p_caret , Tr_test$Pobre)
 
 roc_ROCR_cv <- performance(pred_cv,"tpr","fpr")
 
-plot(roc_ROCR_cv, main = "ROC curve", add=TRUE, colorize = FALSE, col="blue")
+plot(roc_ROCR_cv, main = "ROC curve", add=F, colorize = FALSE, col="blue")
 
 auc_roc_cv = performance(pred_cv, measure = "auc")
 auc_roc_cv@y.values[[1]]
@@ -592,7 +825,7 @@ lambda_grid
 
 #Ajustado para sensibilidad:
 mylogit_lasso_sens <- train(
-  form_logit_1,
+  fmodelo_sel,
   data = Tr_train,
   method = "glmnet",
   trControl = control,
@@ -606,7 +839,7 @@ gc()
 
 #Ajustado para ROC:
 mylogit_lasso_roc <- train(
-  form_logit_1,
+  fmodelo_sel,
   data = Tr_train,
   method = "glmnet",
   trControl = control,
@@ -620,7 +853,7 @@ gc()
 
 #Ajustado para accuracy:
 mylogit_lasso_acc <- train(
-  form_logit_1,
+  fmodelo_sel,
   data = Tr_train,
   method = "glmnet",
   trControl = control,
@@ -694,7 +927,7 @@ gc()
 
 #Ajustado para sensitivity con UPSAMPLE:
 mylogit_lasso_sens_ups <- train(
-  form_logit_1,
+  fmodelo_sel,
   data = upSampledTrain,
   method = "glmnet",
   trControl = control,
@@ -708,7 +941,7 @@ gc()
 
 #Ajustado para sensitivity con DOWNSAMPLE:
 mylogit_lasso_sens_downs <- train(
-  form_logit_1,
+  fmodelo_sel,
   data = downSampledTrain,
   method = "glmnet",
   trControl = control,
@@ -789,13 +1022,12 @@ with(evalResults,table(Pobre,hat_def_rfThresh))
 
 library("MASS")
 
-form_LDA <- as.formula("Pobre ~ Npersug + factor(P5090)")
-
-mylda <- lda(form_LDA, data = Tr_train)
+mylda <- lda(fmodelo_sel, data = Tr_train)
 p_hat_mylda <- predict(mylda, Tr_test, type="response")
 pred_mylda <- prediction(p_hat_mylda$posterior[,2], Tr_test$Pobre)
 
 roc_mylda <- performance(pred_mylda,"tpr","fpr")
+
 
 
 #Para agregar varias ROC:
@@ -851,9 +1083,7 @@ stopCluster(cl)
 install.packages("xgboost")
 require("xgboost")
 
-form_xgboost <- as.formula("Pobre ~ Npersug + P5090 + P5000 + factor(mujer_jf_h)")
-
-form_xgboost <- form_logit_1
+form_xgboost <- modelo_sel
 
 
 grid_default <- expand.grid(nrounds = c(250,500),
@@ -916,9 +1146,7 @@ confusionMatrix(Tr_test$Pobre,pred_xgb_ups,positive="Pobre")
 
 ###Modelo árbol básico (CART) ----
 
-form_tree <- as.formula("Pobre ~ Npersug + P5090 + factor(mujer_jf_h)")
-
-form_tree <- form_logit_1
+form_tree <- modelo_sel
 
 #cp_alpha<-seq(from = 0, to = 0.1, length = 10)
 
@@ -979,14 +1207,41 @@ pred_tree_down <- predict(tree_down,Tr_test)
 confusionMatrix(Tr_test$Pobre,pred_tree_down,positive="Pobre")
 
 
+#2.6. Exportación final ----
 
 
-### Modelo de árbol sofisticado (clase de Lucas) ----
+modelo_final <- caret_logit
+
+setwd("~/GitHub/MECA_BD_PS2")
+test_h <-readRDS("./stores/test_h_si.rds")
+
+nrow(test_h)
+
+levels(Tr_train$P5000)
+levels(Tr_test$P5000)
+levels(test_h$P5000)
+levels(test_h$jf_sub)
+levels(Tr_test$jf_sub)
+
+## Predecir el modelo final:
+
+#TEMPORAL!
+test_h <- test_h[!(test_h$P5000=="43"),]
+test_h$jf_sub <- factor(test_h$jf_sub,levels=c("0","1"),labels=c("jefe de hogar no subsidiado","jefe de hogar subsidiado"))
 
 
+Tr_test$lasso_sens_clas <- factor(ifelse(Tr_test$lasso_sens<0.2,"No_pobre","Pobre"))
 
+test_h$prediccion_final <- predict(modelo_final, test_h , type="prob")[2]
+test_h$Pobre_classification <- ifelse(test_h$prediccion_final < rfThresh$threshold,0,1)
 
+submit  <-  test_h[,c("id","Pobre_classification")]
 
+fmodelo5
+
+## Guardar el .CSV
+setwd("~/GitHub/MECA_BD_PS2/document")
+export(submit,"./predictions_garcia_molano_villa_c12_r5.csv")
 
 
 
