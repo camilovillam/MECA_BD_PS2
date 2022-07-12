@@ -7,7 +7,7 @@
 #Ingrid Lorena Molano
 #Camilo Villa Moreno
 
-#Julio 10, 2022
+#Julio 12, 2022
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 0. PRELIMINARES: PREPARACIÓN ESPACIO DE TRABAJO Y LIBRERÍAS----
@@ -83,9 +83,8 @@ p_load(rio,
 #(Definir cuáles variables usar)
 predict <- stats::predict
 
-
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
+# 1. CARGUE DE LAS BASES DE DATOS Y EXPLORACIÓN INICIAL----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ##1.1. Cargue de las bases de datos ---- 
@@ -135,6 +134,7 @@ compare_df_cols(train_personas,test_personas)
 
 #Comparación detallada:
 summary(comparedf(train_personas,test_personas))
+
 
 
 
@@ -608,11 +608,11 @@ library(ggplot2)
 library(ggpubr)
 
 figuras_3_y_4 <- ggarrange(grafica_3, grafica_4,
-                           labels = c("A", "B"),
-                           ncol = 2, nrow = 1)
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
 # Ver figura
 figuras_3_y_4
-
+ 
 #2.7. Identificar variables importantes en modelo de clasificación---- 
 
 # Se cargan las librerías necesarias
@@ -685,74 +685,74 @@ summary(test_personas$P6100)#Regimenes de seguridad social en salud #126064
 #Se hace un pivot de variables del test personas
 
 edad_pivot <- test_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
-                                              values_from = P6040,#edad 
-                                              names_prefix = "edad",
-                                              values_fill = 0)
+                                               values_from = P6040,#edad 
+                                               names_prefix = "edad",
+                                               values_fill = 0)
 
 edad_pivot <- select (edad_pivot,
-                      id,
-                      edad1,
-                      edad2,
-                      edad3,
-                      edad4,
-                      edad5,
-                      edad6,
-                      edad7,
-                      edad8,
-                      edad9)
+                                id,
+                                edad1,
+                                edad2,
+                                edad3,
+                                edad4,
+                                edad5,
+                                edad6,
+                                edad7,
+                                edad8,
+                                edad9)
 
 horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                                        values_from = P6800, 
-                                                        names_prefix = "ht",
-                                                        values_fill = 0)
+                                                         values_from = P6800, 
+                                                         names_prefix = "ht",
+                                                         values_fill = 0)
 
 
 horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
-                                  id,
-                                  ht1,
-                                  ht2,
-                                  ht3,
-                                  ht4,
-                                  ht5,
-                                  ht6,
-                                  ht7,
-                                  ht8,
-                                  ht9)
+                                            id,
+                                            ht1,
+                                            ht2,
+                                            ht3,
+                                            ht4,
+                                            ht5,
+                                            ht6,
+                                            ht7,
+                                            ht8,
+                                            ht9)
 
 oficio_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                              values_from = Oficio, 
-                                              names_prefix = "of",
-                                              values_fill = 0)
+                                               values_from = Oficio, 
+                                               names_prefix = "of",
+                                               values_fill = 0)
 
 oficio_pivot <- select (oficio_pivot,
-                        id,
-                        of1,
-                        of2,
-                        of3,
-                        of4,
-                        of5,
-                        of6,
-                        of7,
-                        of8,
-                        of9)
+                                  id,
+                                  of1,
+                                  of2,
+                                  of3,
+                                  of4,
+                                  of5,
+                                  of6,
+                                  of7,
+                                  of8,
+                                  of9)
 
 educ_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                            values_from = P6210, 
-                                            names_prefix = "educ",
-                                            values_fill = 0)
+                                             values_from = P6210, 
+                                             names_prefix = "educ",
+                                             values_fill = 0)
 
 
 educ_pivot <- select (educ_pivot,
-                      id,
-                      educ1,
-                      educ2,
-                      educ3,
-                      educ4,
-                      educ5,
-                      educ6,
-                      educ7,
-                      educ8,
-                      educ9)
+                                id,
+                                educ1,
+                                educ2,
+                                educ3,
+                                educ4,
+                                educ5,
+                                educ6,
+                                educ7,
+                                educ8,
+                                educ9)
 
 #Como de cada tipo de persona pueden haber varios en el hogar, 
 #se agregan los casos por tipo de persona segun la función
@@ -1286,24 +1286,24 @@ Tr_test <- Tr_test %>%
 ## Matrices de confusión
 
 cmat_lg_1 <- confusionMatrix(data=Tr_test$p_logit_1, 
-                reference=Tr_test$Pobre , 
-                mode="sens_spec" , positive="Pobre")
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
 
 cmat_lg_2 <- confusionMatrix(data=Tr_test$p_logit_2, 
-                                reference=Tr_test$Pobre , 
-                                mode="sens_spec" , positive="Pobre")
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
 
 cmat_lg_3 <- confusionMatrix(data=Tr_test$p_logit_3, 
-                                reference=Tr_test$Pobre , 
-                                mode="sens_spec" , positive="Pobre")
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
 
 cmat_lg_4 <- confusionMatrix(data=Tr_test$p_logit_4, 
-                                reference=Tr_test$Pobre , 
-                                mode="sens_spec" , positive="Pobre")
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
 
 cmat_lg_5 <- confusionMatrix(data=Tr_test$p_logit_5, 
-                                reference=Tr_test$Pobre , 
-                                mode="sens_spec" , positive="Pobre")
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
 
 cmat_lg_1
 cmat_lg_2
@@ -1416,7 +1416,7 @@ with(evalResults,table(Pobre,hat_def_rfThresh))
 #Ahora en Test con el cut off óptimo:
 
 Tr_test$caret_logit_roc <- predict(caret_logit, newdata = Tr_test,
-                           type = "prob")[,2] ##OJO!!! ¿1 o 2?
+                                   type = "prob")[,2] ##OJO!!! ¿1 o 2?
 
 
 Tr_test <- Tr_test %>% 
@@ -1428,8 +1428,8 @@ Tr_test$caret_logit_hat_def_rfThresh <- factor(Tr_test$caret_logit_hat_def_rfThr
 
 ## Matriz de confusión
 cm_caret_coff_opt <- confusionMatrix(data=Tr_test$caret_logit_hat_def_rfThresh, 
-                reference=Tr_test$Pobre , 
-                mode="sens_spec" , positive="Pobre")
+                                     reference=Tr_test$Pobre , 
+                                     mode="sens_spec" , positive="Pobre")
 
 cm_caret_coff_opt
 
@@ -1549,12 +1549,12 @@ Tr_test <- Tr_test %>%
 
 
 confmat_mod_sel_ups <- confusionMatrix(data=Tr_test$p_logit_mod_sel_ups, 
-                                reference=Tr_test$Pobre , 
-                                mode="sens_spec" , positive="Pobre")
-
-confmat_mod_sel_downs <- confusionMatrix(data=Tr_test$p_logit_mod_sel_downs, 
                                        reference=Tr_test$Pobre , 
                                        mode="sens_spec" , positive="Pobre")
+
+confmat_mod_sel_downs <- confusionMatrix(data=Tr_test$p_logit_mod_sel_downs, 
+                                         reference=Tr_test$Pobre , 
+                                         mode="sens_spec" , positive="Pobre")
 
 confmat_mod_sel_ups
 confmat_mod_sel_downs
@@ -1574,11 +1574,11 @@ control <- trainControl(method = "cv", number = 5,
 
 ## Entrenar el modelo
 caret_logit  <-  train(fmodelo_sel,
-                    data=Tr_train,
-                    method="glm",
-                    trControl = control,
-                    family = "binomial",
-                    preProcess = c("center", "scale"))
+                       data=Tr_train,
+                       method="glm",
+                       trControl = control,
+                       family = "binomial",
+                       preProcess = c("center", "scale"))
 caret_logit
 
 ## predict
@@ -1649,8 +1649,8 @@ Tr_test$lasso_sens <- predict(mylogit_lasso_sens,
                               type = "prob")[,2] #REVISAR
 
 Tr_test$lasso_roc <- predict(mylogit_lasso_roc,
-                              newdata = Tr_test,
-                              type = "prob")[,2] #REVISAR
+                             newdata = Tr_test,
+                             type = "prob")[,2] #REVISAR
 
 Tr_test$lasso_acc <- predict(mylogit_lasso_acc,
                              newdata = Tr_test,
@@ -1665,16 +1665,16 @@ Tr_test$lasso_acc_clas <- factor(ifelse(Tr_test$lasso_acc<0.2,"No_pobre","Pobre"
 
 ## Matriz de confusión
 cmat_lasso_sens <- confusionMatrix(data=Tr_test$lasso_sens_clas, 
-                reference=Tr_test$Pobre , 
-                mode="sens_spec" , positive="Pobre")
+                                   reference=Tr_test$Pobre , 
+                                   mode="sens_spec" , positive="Pobre")
 
 cmat_lasso_roc <- confusionMatrix(data=Tr_test$lasso_roc_clas, 
-                reference=Tr_test$Pobre , 
-                mode="sens_spec" , positive="Pobre")
+                                  reference=Tr_test$Pobre , 
+                                  mode="sens_spec" , positive="Pobre")
 
 cmat_lasso_acc <- confusionMatrix(data=Tr_test$lasso_acc_clas, 
-                reference=Tr_test$Pobre , 
-                mode="sens_spec" , positive="Pobre")
+                                  reference=Tr_test$Pobre , 
+                                  mode="sens_spec" , positive="Pobre")
 
 cmat_lasso_sens 
 cmat_lasso_roc
@@ -1737,12 +1737,12 @@ mylogit_lasso_sens_downs <- train(
 
 
 Tr_test$lasso_sens_ups <- predict(mylogit_lasso_sens_ups,
-                              newdata = Tr_test,
-                              type = "prob")[,2] #REVISAR
+                                  newdata = Tr_test,
+                                  type = "prob")[,2] #REVISAR
 
 Tr_test$lasso_sens_downs <- predict(mylogit_lasso_sens_downs,
-                             newdata = Tr_test,
-                             type = "prob")[,2] #REVISAR
+                                    newdata = Tr_test,
+                                    type = "prob")[,2] #REVISAR
 
 Tr_test$lasso_sens_ups_clas <- factor(ifelse(Tr_test$lasso_sens_ups<0.5,"No_pobre","Pobre"))
 Tr_test$lasso_sens_downs_clas <- factor(ifelse(Tr_test$lasso_sens_downs<0.5,"No_pobre","Pobre"))
@@ -1750,12 +1750,12 @@ Tr_test$lasso_sens_downs_clas <- factor(ifelse(Tr_test$lasso_sens_downs<0.5,"No_
 
 ## Matriz de confusión
 cmat_lasso_sens_ups <- confusionMatrix(data=Tr_test$lasso_sens_ups_clas, 
-                reference=Tr_test$Pobre , 
-                mode="sens_spec" , positive="Pobre")
+                                       reference=Tr_test$Pobre , 
+                                       mode="sens_spec" , positive="Pobre")
 
 cmat_lasso_sens_downs <- confusionMatrix(data=Tr_test$lasso_sens_downs_clas, 
-                reference=Tr_test$Pobre , 
-                mode="sens_spec" , positive="Pobre")
+                                         reference=Tr_test$Pobre , 
+                                         mode="sens_spec" , positive="Pobre")
 
 
 cmat_lasso_sens_downs
@@ -2061,13 +2061,13 @@ tabla_comp_clasif[1,6] <- Matrices_conf[[1]]@byClass$Sensitivity #Sensitivity
 tabla_comp_clasif[1,7] <- #Specificity
 tabla_comp_clasif[1,8] <- #Accuracy
 tabla_comp_clasif[1,9] <- #Puntaje final (75% / 25%)
-
+  
   
 acc_mod1 <- Matrices_conf[[1]]$byClass$Sensitivity
 
 sens_mod1 <- cmat_lg_1$byClass$Sensitivity
 
-  
+
 view(tabla_comp_clasif)
 tabla_comp_clasif
 
@@ -2493,8 +2493,6 @@ export(submit,"./predictions_garcia_molano_villa_c12_r23.csv")
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
 
 
 
