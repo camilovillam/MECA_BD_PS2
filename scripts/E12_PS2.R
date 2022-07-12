@@ -622,7 +622,6 @@ auc_roc_cv = performance(pred_cv, measure = "auc")
 auc_roc_cv@y.values[[1]]
 
 
-
 ## Punto de corte óptimo:
 
 evalResults <- data.frame(Pobre = Tr_eval$Pobre)
@@ -664,8 +663,7 @@ cm_caret_coff_opt <- confusionMatrix(data=Tr_test$caret_logit_hat_def_rfThresh,
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-
-fmodelo5
+cm_caret_coff_opt
 
 
 ## 3.3. Rebalanceo de clases, remuestreo ----
@@ -708,9 +706,14 @@ prop.table(table(downSampledTrain$Pobre))
 
 #Automatizar esto con tratamiento de cadenas de caracteres
 
-modelo_sel
+fmodelo_sel
 
-predictors <-c ("Npersug","P5090","P5000","edad_p1","mujer_jf_h","educ_p1","ht_p1","jf_sub")
+
+
+predictors <-c ("Npersug" , "P5010" , "P5090" , "P5000" , "edad_p1" ,
+                "mujer_jf_h" , "educ_p1" , "educ_p3" , "ht_p1" , "jf_sub" ,
+                "hijos" , "ht_p1" , "pj_jf_sintrabajo" , "jf_sintrabajo")
+
 head(Tr_train[predictors])
 
 
@@ -905,6 +908,11 @@ cmat_lasso_acc <- confusionMatrix(data=Tr_test$lasso_acc_clas,
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
+cmat_lasso_sens 
+cmat_lasso_roc
+cmat_lasso_acc
+
+
 # ROC
 pred_lasso_sens <- prediction(Tr_test$lasso_sens, Tr_test$Pobre)
 pred_lasso_roc <- prediction(Tr_test$lasso_roc, Tr_test$Pobre)
@@ -1071,7 +1079,7 @@ stopCluster(cl)
 install.packages("xgboost")
 require("xgboost")
 
-form_xgboost <- modelo_sel
+form_xgboost <- fmodelo_sel
 
 
 grid_default <- expand.grid(nrounds = c(250,500),
@@ -1127,6 +1135,8 @@ cmat_xgboost <- confusionMatrix(Tr_test$Pobre,pred_xgb,positive="Pobre")
 cmat_xgboost_downs <- confusionMatrix(Tr_test$Pobre,pred_xgb_downs,positive="Pobre")
 cmat_xgboost_ups <- confusionMatrix(Tr_test$Pobre,pred_xgb_ups,positive="Pobre")
 
+cmat_xgboost_downs
+
 #Pendiente: Gráfica ROC de XGBoost:
 # https://stackoverflow.com/questions/46736934/plotting-the-auc-from-an-xgboost-model-in-r
 
@@ -1134,7 +1144,7 @@ cmat_xgboost_ups <- confusionMatrix(Tr_test$Pobre,pred_xgb_ups,positive="Pobre")
 
 ###Modelo árbol básico (CART) ----
 
-form_tree <- modelo_sel
+form_tree <- fmodelo_sel
 
 #cp_alpha<-seq(from = 0, to = 0.1, length = 10)
 
@@ -1174,6 +1184,8 @@ rpart.plot::prp(tree_up$finalModel)
 pred_tree_up <- predict(tree_up,Tr_test)
 c_matr_tree_ups <- confusionMatrix(Tr_test$Pobre,pred_tree_up,positive="Pobre")
 
+c_matr_tree_ups
+
 
 # Arbol con downsample:
 
@@ -1192,6 +1204,9 @@ tree_down
 rpart.plot::prp(tree_down$finalModel)
 pred_tree_down <- predict(tree_down,Tr_test)
 c_matr_tree_downs <- confusionMatrix(Tr_test$Pobre,pred_tree_down,positive="Pobre")
+
+c_matr_tree_downs
+
 
 ##3.6. Comparación final de modelos de clasificación ----
 
