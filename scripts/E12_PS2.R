@@ -383,7 +383,7 @@ predict <- stats::predict
 #Balance inicial
 prop.table(table(train_h$Pobre))
 
-#Generamos las particiones
+### Generación de particiones ----
 set.seed(100)
 split1 <- createDataPartition(train_h$Pobre, p = .7)[[1]]
 length(split1)
@@ -397,7 +397,7 @@ Tr_eval <- other[ split2,]
 Tr_test <- other[-split2,]
 
 
-## Balance final
+### Balance final ----
 prop.table(table(train_h$Pobre))
 prop.table(table(Tr_train$Pobre))
 prop.table(table(Tr_eval$Pobre))
@@ -423,11 +423,22 @@ colnames(train_h)
 #                            mujer_jf_h + educ_p1 + ht_p1 + jf_sub")
 
 fmodelo1 <- as.formula("Pobre ~ jf_sub + educ_p3 + Clase + P5000 + ht_p1")
-fmodelo2 <- as.formula("Pobre ~ jf_sub + hijos + P5000 + Npersug")
-fmodelo3 <- as.formula("Pobre ~ jf_sub + educ_p3 + hijos + pj_jf_sintrabajo")
-fmodelo4 <- as.formula("Pobre ~ jf_sub + educ_p3 + hijos + pj_jf_sintrabajo + P5090")
-fmodelo5 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + edad_p1 + mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + hijos + ht_p1 + pj_jf_sintrabajo")
 
+fmodelo2 <- as.formula("Pobre ~ Npersug + P5010 + P5090 + P5000 + edad_p1 + 
+                       mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + 
+                       hijos + ht_p1 + pj_jf_sintrabajo + jf_sintrabajo")
+
+fmodelo3 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + edad_p1 + 
+                       mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + 
+                       hijos + ht_p1 + pj_jf_sintrabajo + jf_sintrabajo")
+
+fmodelo4 <- as.formula("Pobre ~ Npersug:P5010 + P5090 + P5000 + edad_p1 + 
+                       mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + 
+                       hijos + ht_p1 + pj_jf_sintrabajo + jf_sintrabajo")
+
+fmodelo5 <- as.formula("Pobre ~ Npersug + P5090 + P5000 + edad_p1 + 
+                       mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + 
+                       hijos + ht_p1 + pj_jf_sintrabajo")
 
 
 #Se estima el modelo Logit
@@ -452,7 +463,7 @@ summary(mod_logit_4, type="text")
 summary(mod_logit_5, type="text")
 
 #TEMPORAL:
-Tr_test <- Tr_test[!(Tr_test$P5000=="98" | Tr_test$P5000=="16"),]
+#Tr_test <- Tr_test[!(Tr_test$P5000=="98" | Tr_test$P5000=="16"),]
 
 
 ## Predicción Pobre sobre la base de Test
@@ -480,22 +491,22 @@ ggplot(data=Tr_test , mapping = aes(Pobre, predict_logit_5)) +
   geom_boxplot(aes(fill=Pobre)) + theme_test()
 
 #Se agrega el resultado de la predicción según la probabilidad de Logit
-#Con regla "boba" de Bayes
+#El punto de corte se define por inspección gráfica
 
 Tr_test <- Tr_test %>% 
-  mutate(p_logit_1 = ifelse(predict_logit_1 < 0.2,0,1) %>% 
+  mutate(p_logit_1 = ifelse(predict_logit_1 < 0.23,0,1) %>% 
            factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
 Tr_test <- Tr_test %>% 
-  mutate(p_logit_2 = ifelse(predict_logit_2 < 0.2,0,1) %>% 
+  mutate(p_logit_2 = ifelse(predict_logit_2 < 0.22,0,1) %>% 
            factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
 Tr_test <- Tr_test %>% 
-  mutate(p_logit_3 = ifelse(predict_logit_3 < 0.2,0,1) %>% 
+  mutate(p_logit_3 = ifelse(predict_logit_3 < 0.20,0,1) %>% 
            factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
 Tr_test <- Tr_test %>% 
-  mutate(p_logit_4 = ifelse(predict_logit_4 < 0.2,0,1) %>% 
+  mutate(p_logit_4 = ifelse(predict_logit_4 < 0.18,0,1) %>% 
            factor(.,levels=c(0,1),labels=c("No_pobre","Pobre")))
 
 Tr_test <- Tr_test %>% 
@@ -546,7 +557,7 @@ roc_ROCR_lg_3 <- performance(pred_lg_3,"tpr","fpr")
 roc_ROCR_lg_4 <- performance(pred_lg_4,"tpr","fpr")
 roc_ROCR_lg_5 <- performance(pred_lg_5,"tpr","fpr")
 
-plot(roc_ROCR_lg_1, main = "ROC curve", colorize = FALSE, col="black")
+plot(roc_ROCR_lg_1, main = "ROC curve", colorize = FALSE, col="orange")
 plot(roc_ROCR_lg_2, main = "ROC curve", add=TRUE, colorize = FALSE, col="blue")
 plot(roc_ROCR_lg_3, main = "ROC curve", add=TRUE, colorize = FALSE, col="green")
 plot(roc_ROCR_lg_4, main = "ROC curve", add=TRUE, colorize = FALSE, col="red")
@@ -572,8 +583,11 @@ auc_roc_lg_5@y.values[[1]]
 ## Validación cruzada K-Fold:
 
 #Modelo_seleccionado:
-fmodelo_sel <- fmodelo5
-modelo_sel <- mod_logit_5
+
+#ESTO SE DEBE AJUSTAR SI SE CAMBIAN LOS MODELOS:
+
+fmodelo_sel <- fmodelo4
+modelo_sel <- mod_logit_4
 
 
 #Definición del control (a usarse en los demás modelos)
