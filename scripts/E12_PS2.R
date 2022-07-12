@@ -306,7 +306,7 @@ train_personas_jf <- train_personas_jf %>% mutate(
 )
 
 train_personas_jf <- train_personas_jf %>% mutate(
-  jf_sub = if_else(P6050==1 & P6100==3, 1, 0)
+  jf_sub = if_else(P6050==1 & P6100==3 | P6100==4, 1, 0)
 )
 
 train_personas_jf <- train_personas_jf %>% mutate(
@@ -795,8 +795,6 @@ test_h0 <-
 
 #Creación de otras variables
 
-#Creación de otras variables
-
 test_personas_jf <- test_personas %>% mutate(
   mujer_jf_h = if_else(P6020==2 & P6050==1, 1, 0)
 )
@@ -818,15 +816,15 @@ test_personas_jf <- test_personas_jf %>% mutate(
 )
 
 test_personas_jf <- test_personas_jf %>% mutate(
-  jf_sub = if_else(P6050==1 & P6100==3, 1, 0)
+  jf_sub = if_else(P6050==1 & (P6100==3 | P6100==4), 1, 0)
 )
 
 test_personas_jf <- test_personas_jf %>% mutate(
-  jf_afiliado = if_else(P6050==1 & P6090==2 | P6090==3, 1, 0)
+  jf_afiliado = if_else(P6050==1 & (P6090==2 | P6090==3), 1, 0)
 )
 
 test_personas_jf <- test_personas_jf %>% mutate(
-  jf_sintrabajo = if_else(P6050==1 & P6240==2 | P6240==5, 1, 0)
+  jf_sintrabajo = if_else(P6050==1 & (P6240==2 | P6240==5), 1, 0)
 )
 
 test_personas_jf <- test_personas_jf %>% mutate(
@@ -897,7 +895,7 @@ porcentaje_na <- cantidad_na/nrow(test_h)
 # Porcentaje de observaciones faltantes. 
 p <- mean(porcentaje_na[,1])
 print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 8.3 % de las entradas están vacías"
+#En promedio el 7.14 % de las entradas están vacías"
 
 #Se visualiza el porcentaje de observaciones faltantes por variable
 
@@ -939,8 +937,6 @@ vars_drop <- c("P5100",
                "P5140", 
                "pj_jf_P7422",
                "P5130",
-               "jf_afiliado",
-               "jf_sintrabajo",
                "pj_jf_P7472",
                "jf_nc_pension")
 test_h_si <- test_h[,!(names(test_h) %in% vars_drop)]
@@ -948,13 +944,97 @@ k0 <- ncol(test_h)
 k1 <- ncol(test_h_si)
 print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
 
-#se crea test hogares borrando las filas de ht_p1 que están con NA
+#se crea test hogares imputando de las filas que están con NA
 
-test_h_si <- test_h_si %>% filter(!is.na(jf_sub))#pasa de 66168 a 62479 obs
-test_h_si <- test_h_si [is.finite(test_h_si$ht_p1), ] #pasa de 62479 a 59307 obs
-test_h_si <- test_h_si %>% filter(!is.na(pj_jf_ofhogar)) #pasa de 59307 a 59298 obs
-test_h_si <- test_h_si %>% filter(!is.na(pj_jf_sintrabajo)) #pasa de 59298 a 59298 obs
+library("recipes")
 
+test_h_si_bu  <- test_h_si
+
+test_h_si <- test_h_si_bu
+
+# Agregar variable temporal con valores sin NA. Lo que sea NA se reemplaza con 1.
+test_h_si <- test_h_si %>% mutate(
+  jf_sub_SNA =  if_else(is.na(jf_sub), 1,jf_sub)
+)
+# Eliminar columna con NA
+drops <- c("jf_sub")
+test_h_si <- test_h_si[, !names(test_h_si) %in% drops]
+# Renombrar columna a nombre anterior
+test_h_si <- test_h_si %>% rename(
+  jf_sub = jf_sub_SNA
+)
+
+# Agregar variable temporal con valores sin NA. Lo que sea NA se reemplaza con 1.
+test_h_si <- test_h_si %>% mutate(
+  pj_jf_ofhogar_SNA =  if_else(is.na(pj_jf_ofhogar), 1, pj_jf_ofhogar)
+)
+# Eliminar columna con NA
+drops <- c("pj_jf_ofhogar")
+test_h_si <- test_h_si[, !names(test_h_si) %in% drops]
+# Renombrar columna a nombre anterior
+test_h_si <- test_h_si %>% rename(
+  pj_jf_ofhogar = pj_jf_ofhogar_SNA
+)
+
+# Agregar variable temporal con valores sin NA. Lo que sea NA se reemplaza con 1.
+test_h_si <- test_h_si %>% mutate(
+  pj_jf_sintrabajo_SNA =  if_else(is.na(pj_jf_sintrabajo), 1, pj_jf_sintrabajo)
+)
+# Eliminar columna con NA
+drops <- c("pj_jf_sintrabajo")
+test_h_si <- test_h_si[, !names(test_h_si) %in% drops]
+# Renombrar columna a nombre anterior
+test_h_si <- test_h_si %>% rename(
+  pj_jf_sintrabajo = pj_jf_sintrabajo_SNA
+)
+
+# Agregar variable temporal con valores sin NA. Lo que sea NA se reemplaza con 1.
+test_h_si <- test_h_si %>% mutate(
+  jf_afiliado_SNA =  if_else(is.na(jf_afiliado), 1, jf_afiliado)
+)
+# Eliminar columna con NA
+drops <- c("jf_afiliado")
+test_h_si <- test_h_si[, !names(test_h_si) %in% drops]
+# Renombrar columna a nombre anterior
+test_h_si <- test_h_si %>% rename(
+  jf_afiliado = jf_afiliado_SNA
+)
+
+# Agregar variable temporal con valores sin NA. Lo que sea NA se reemplaza con 1.
+test_h_si <- test_h_si %>% mutate(
+  jf_sintrabajo_SNA =  if_else(is.na(jf_sintrabajo), 1, jf_sintrabajo)
+)
+# Eliminar columna con NA
+drops <- c("jf_sintrabajo")
+test_h_si <- test_h_si[, !names(test_h_si) %in% drops]
+# Renombrar columna a nombre anterior
+test_h_si <- test_h_si %>% rename(
+  jf_sintrabajo = jf_sintrabajo_SNA
+)
+
+# Agregar variable temporal con valores sin Infinito. Lo que sea Infinito se reemplaza con la mediana.
+test_h_si <- test_h_si %>% mutate(
+  ht_p1_SINF =  if_else(is.infinite(ht_p1), median(test_h_si$ht_p1), ht_p1)
+)
+# Eliminar columna con Infinito
+drops <- c("ht_p1")
+test_h_si <- test_h_si[, !names(test_h_si) %in% drops]
+# Renombrar columna a nombre anterior
+test_h_si <- test_h_si %>% rename(
+  ht_p1 = ht_p1_SINF
+)
+
+# Agregar variable temporal con valores sin Infinito. Lo que sea Infinito se reemplaza con 0.
+test_h_si <- test_h_si %>% mutate(
+  of_p1_SINF =  if_else(is.infinite(of_p1), 0, of_p1)
+)
+# Eliminar columna con Infinito
+drops <- c("of_p1")
+test_h_si <- test_h_si[, !names(test_h_si) %in% drops]
+# Renombrar columna a nombre anterior
+test_h_si <- test_h_si %>% rename(
+  of_p1 = of_p1_SINF
+)
 
 #3.3. Convertir en factor variables de base test ---- 
 
@@ -983,15 +1063,16 @@ test_h_si$educ_p7 <- factor(test_h_si$educ_p7)
 test_h_si$educ_p8 <- factor(test_h_si$educ_p8)
 test_h_si$educ_p9 <- factor(test_h_si$educ_p9)
 
-test_h_si$mujer_jf_h <- factor(test_h_si$mujer_jf_h)
+test_h_si$mujer_jf_h <- factor(test_h_si$mujer_jf_h, labels = c("Hombre Jefe de hogar", "Mujer Jefe de Hogar"))
 test_h_si$jf_10_18_h <- factor(test_h_si$jf_10_18_h)
 test_h_si$jf_19_28_h <- factor(test_h_si$jf_19_28_h)
 test_h_si$jf_29_59_h <- factor(test_h_si$jf_29_59_h)
 test_h_si$jf_60_h <- factor(test_h_si$jf_60_h)
-test_h_si$jf_sub <- factor(test_h_si$jf_sub)
+test_h_si$jf_sub <- factor(test_h_si$jf_sub,labels = c("jefe de hogar no subsidiado", "jefe de hogar subsidiado" )) 
 test_h_si$pj_jf_ofhogar <- factor(test_h_si$pj_jf_ofhogar)
-test_h_si$pj_jf_sintrabajo <- factor(test_h_si$pj_jf_sintrabajo)
-
+test_h_si$pj_jf_sintrabajo <- factor(test_h_si$pj_jf_sintrabajo, labels = c("Pareja Sin Trabajo", "Pareja Con Trabajo"))
+test_h_si$jf_afiliado <- factor(test_h_si$jf_afiliado)
+test_h_si$jf_sintrabajo <- factor(test_h_si$jf_sintrabajo)
 
 #3.4. Guardar la base test ----   
 
