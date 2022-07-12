@@ -346,7 +346,7 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 2. MODELOS DE CLASIFICACIÓN DE POBREZA----
+# 3. MODELOS DE CLASIFICACIÓN DE POBREZA----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #Temporal: lectura BD
@@ -373,7 +373,7 @@ train_h$Pobre <- factor(train_h$Pobre,levels=c("No Pobre","Pobre"),labels=c("No_
 
 predict <- stats::predict
 
-##2.1. Partición de la base de datos en tres----
+##3.1. Partición de la base de datos en tres----
 
 #La base de datos Train se divide en tres particiones:
 # Tr_train: Entrenar el modelo
@@ -409,7 +409,7 @@ nrow(Tr_test)
 rm(other)
 
 
-## 2.2. Modelos sencillos Logit ----
+## 3.2. Modelos Logit ----
 # Se ensayan 5 modelos diferentes con distintas variables, como una primera
 # aproximación.
 # Más adelante se introducen más variaciones y métodos
@@ -506,31 +506,31 @@ Tr_test <- Tr_test %>%
 
 ## Matrices de confusión
 
-confmat_lg_1 <- confusionMatrix(data=Tr_test$p_logit_1, 
+cmat_lg_1 <- confusionMatrix(data=Tr_test$p_logit_1, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-confmat_lg_2 <- confusionMatrix(data=Tr_test$p_logit_2, 
+cmat_lg_2 <- confusionMatrix(data=Tr_test$p_logit_2, 
                                 reference=Tr_test$Pobre , 
                                 mode="sens_spec" , positive="Pobre")
 
-confmat_lg_3 <- confusionMatrix(data=Tr_test$p_logit_3, 
+cmat_lg_3 <- confusionMatrix(data=Tr_test$p_logit_3, 
                                 reference=Tr_test$Pobre , 
                                 mode="sens_spec" , positive="Pobre")
 
-confmat_lg_4 <- confusionMatrix(data=Tr_test$p_logit_4, 
+cmat_lg_4 <- confusionMatrix(data=Tr_test$p_logit_4, 
                                 reference=Tr_test$Pobre , 
                                 mode="sens_spec" , positive="Pobre")
 
-confmat_lg_5 <- confusionMatrix(data=Tr_test$p_logit_5, 
+cmat_lg_5 <- confusionMatrix(data=Tr_test$p_logit_5, 
                                 reference=Tr_test$Pobre , 
                                 mode="sens_spec" , positive="Pobre")
 
-confmat_lg_1
-confmat_lg_2
-confmat_lg_3
-confmat_lg_4
-confmat_lg_5
+cmat_lg_1
+cmat_lg_2
+cmat_lg_3
+cmat_lg_4
+cmat_lg_5
 
 
 ## ROC
@@ -646,7 +646,7 @@ Tr_test$caret_logit_hat_def_05 <- factor(Tr_test$caret_logit_hat_def_05)
 Tr_test$caret_logit_hat_def_rfThresh <- factor(Tr_test$caret_logit_hat_def_rfThresh)
 
 ## Matriz de confusión
-confusionMatrix(data=Tr_test$caret_logit_hat_def_rfThresh, 
+cm_caret_coff_opt <- confusionMatrix(data=Tr_test$caret_logit_hat_def_rfThresh, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
@@ -654,7 +654,7 @@ confusionMatrix(data=Tr_test$caret_logit_hat_def_rfThresh,
 fmodelo5
 
 
-## 2.3. Rebalanceo de clases, remuestreo ----
+## 3.3. Rebalanceo de clases, remuestreo ----
 
 #### Upsampling ----
 
@@ -776,7 +776,7 @@ confmat_mod_sel_downs
 
 #Optimal Cut off
 
-##2.4. Model Tunning con Caret ----
+## 3.4. Model Tunning con Caret ----
 
 #Definición del control (a usarse en los demás modelos)
 fiveStats <- function(...) c(twoClassSummary(...), defaultSummary(...))
@@ -879,15 +879,15 @@ Tr_test$lasso_acc_clas <- factor(ifelse(Tr_test$lasso_acc<0.2,"No_pobre","Pobre"
 
 
 ## Matriz de confusión
-confusionMatrix(data=Tr_test$lasso_sens_clas, 
+cmat_lasso_sens <- confusionMatrix(data=Tr_test$lasso_sens_clas, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-confusionMatrix(data=Tr_test$lasso_roc_clas, 
+cmat_lasso_roc <- confusionMatrix(data=Tr_test$lasso_roc_clas, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-confusionMatrix(data=Tr_test$lasso_acc_clas, 
+cmat_lasso_acc <- confusionMatrix(data=Tr_test$lasso_acc_clas, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
@@ -959,11 +959,11 @@ Tr_test$lasso_sens_downs_clas <- factor(ifelse(Tr_test$lasso_sens_downs<0.5,"No_
 
 
 ## Matriz de confusión
-confusionMatrix(data=Tr_test$lasso_sens_ups_clas, 
+cmat_lasso_sens_ups <- confusionMatrix(data=Tr_test$lasso_sens_ups_clas, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
-confusionMatrix(data=Tr_test$lasso_sens_downs_clas, 
+cmat_lasso_sens_downs <- confusionMatrix(data=Tr_test$lasso_sens_downs_clas, 
                 reference=Tr_test$Pobre , 
                 mode="sens_spec" , positive="Pobre")
 
@@ -1033,27 +1033,7 @@ abline(a = 0, b = 1)
 
 
 
-##2.5.Otros modelos ----
-
-# Sugerencia: empezar con el más complejo: 
-  # Meterle todas las variables en un Boosting
-  # Usar "Variables importance"
-  # Identificar las que mejor funcionan
-
-# Logit simple
-# Logit lasso
-# Otro cut off
-# Balancear la muestra:
-  # upsample
-  # down
-  # combinación (SMOTE)
-# Árboles
-# Random forest
-# Boosting trees
-# ADboost
-# XGBoost
-# Todas las combinaciones posibles
-  #XGBoost + rebalanceo +  cutoff 
+## 3.5.Otros modelos ----
 
 
 ###Preparación del PC, cálculos en paralelo ----
@@ -1129,9 +1109,9 @@ pred_xgb <- predict(xgboost,Tr_test)
 pred_xgb_downs <- predict(xgboost_downs,Tr_test)
 pred_xgb_ups <- predict(xgboost_ups,Tr_test)
 
-confusionMatrix(Tr_test$Pobre,pred_xgb,positive="Pobre")
-confusionMatrix(Tr_test$Pobre,pred_xgb_downs,positive="Pobre")
-confusionMatrix(Tr_test$Pobre,pred_xgb_ups,positive="Pobre")
+cmat_xgboost <- confusionMatrix(Tr_test$Pobre,pred_xgb,positive="Pobre")
+cmat_xgboost_downs <- confusionMatrix(Tr_test$Pobre,pred_xgb_downs,positive="Pobre")
+cmat_xgboost_ups <- confusionMatrix(Tr_test$Pobre,pred_xgb_ups,positive="Pobre")
 
 #Pendiente: Gráfica ROC de XGBoost:
 # https://stackoverflow.com/questions/46736934/plotting-the-auc-from-an-xgboost-model-in-r
@@ -1162,7 +1142,6 @@ c_matr_tree <- confusionMatrix(Tr_test$Pobre,pred_tree,positive="Pobre")
 c_matr_tree
 
 
-
 # Árbol con balance de clases, upsample:
 
 tree_up <- train(
@@ -1179,7 +1158,7 @@ tree_up <- train(
 tree_up
 rpart.plot::prp(tree_up$finalModel)
 pred_tree_up <- predict(tree_up,Tr_test)
-confusionMatrix(Tr_test$Pobre,pred_tree_up,positive="Pobre")
+c_matr_tree_ups <- confusionMatrix(Tr_test$Pobre,pred_tree_up,positive="Pobre")
 
 
 # Arbol con downsample:
@@ -1198,10 +1177,36 @@ tree_down <- train(
 tree_down
 rpart.plot::prp(tree_down$finalModel)
 pred_tree_down <- predict(tree_down,Tr_test)
-confusionMatrix(Tr_test$Pobre,pred_tree_down,positive="Pobre")
+c_matr_tree_downs <- confusionMatrix(Tr_test$Pobre,pred_tree_down,positive="Pobre")
+
+##3.6. Comparación final de modelos de clasificación ----
+
+#Se presentan las matrices de confusión de los diferentes modelos,
+#para elegir el mejor
+
+cmat_lg_1
+cmat_lg_2
+cmat_lg_3
+cmat_lg_4
+cmat_lg_5
+cm_caret_coff_opt
+confmat_mod_sel_ups
+confmat_mod_sel_downs
+cmat_lasso_sens
+cmat_lasso_roc
+cmat_lasso_acc
+cmat_lasso_sens_ups
+cmat_lasso_sens_downs
+cmat_xgboost
+cmat_xgboost_downs
+cmat_xgboost_ups
+c_matr_tree
+c_matr_tree_ups
+c_matr_tree_downs
 
 
-#2.6. Exportación final ----
+
+##3.7. Exportación final ----
 
 
 modelo_final <- caret_logit
@@ -1224,8 +1229,6 @@ test_h <- test_h[!(test_h$P5000=="43"),]
 test_h$jf_sub <- factor(test_h$jf_sub,levels=c("0","1"),labels=c("jefe de hogar no subsidiado","jefe de hogar subsidiado"))
 
 
-Tr_test$lasso_sens_clas <- factor(ifelse(Tr_test$lasso_sens<0.2,"No_pobre","Pobre"))
-
 test_h$prediccion_final <- predict(modelo_final, test_h , type="prob")[2]
 test_h$Pobre_classification <- ifelse(test_h$prediccion_final < rfThresh$threshold,0,1)
 
@@ -1241,15 +1244,15 @@ export(submit,"./predictions_garcia_molano_villa_c12_r5.csv")
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 3. MODELOS DE PREDICCIÓN DE INGRESOS----
+# 4. MODELOS DE PREDICCIÓN DE INGRESOS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-#3.1. ----
+## 4.1. ----
 
 
 
-#3.2. ----
+## 4.2. ----
 
 
 
