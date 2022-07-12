@@ -7,7 +7,7 @@
 #Ingrid Lorena Molano
 #Camilo Villa Moreno
 
-#Julio 10, 2022
+#Julio 12, 2022
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 0. PRELIMINARES: PREPARACIÓN ESPACIO DE TRABAJO Y LIBRERÍAS----
@@ -84,7 +84,7 @@ p_load(rio,
 predict <- stats::predict
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
+# 1. CARGUE DE LAS BASES DE DATOS Y EXPLORACIÓN INICIAL----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #1.1. Cargue de las bases de datos ---- 
@@ -147,23 +147,23 @@ summary(comparedf(train_personas,test_personas))
 #Se hace un primer filtro dejando en la base train las variables que están en el test de hogares
 #Se dejan 2 variables de trian hogares que no están en tres hogares Pobre e Ingtotug
 train_h0 <- select(train_hogares,id,
-                   Clase,
-                   Dominio,
-                   Pobre,
-                   Ingtotug,
-                   P5000,#Incluyendo sala-comedor ¿de cuántos cuartos en total dispone este hogar? 
-                   P5010,#¿En cuántos de esos cuartos duermen las personas de este hogar? 
-                   P5090,#vivienda propia
-                   P5100,
-                   P5130,
-                   P5140,
-                   Nper,#Número de personas en el hogar
-                   Npersug,#Número de personas en la unidad de gasto
-                   Li,#Pobreza Extrema (Línea de indigencia)
-                   Lp,#línea de Pobreza
-                   Fex_c,
-                   Depto,#Departamento
-                   Fex_dpto)#Factor de expasión departamental
+                                Clase,
+                                Dominio,
+                                Pobre,
+                                Ingtotug,
+                                P5000,#Incluyendo sala-comedor ¿de cuántos cuartos en total dispone este hogar? 
+                                P5010,#¿En cuántos de esos cuartos duermen las personas de este hogar? 
+                                P5090,#vivienda propia
+                                P5100,
+                                P5130,
+                                P5140,
+                                Nper,#Número de personas en el hogar
+                                Npersug,#Número de personas en la unidad de gasto
+                                Li,#Pobreza Extrema (Línea de indigencia)
+                                Lp,#línea de Pobreza
+                                Fex_c,
+                                Depto,#Departamento
+                                Fex_dpto)#Factor de expasión departamental
 
 
 
@@ -181,74 +181,74 @@ summary(train_personas$Oficio)#oficio
 #Se hace un pivot de variables del train personas
 
 edad_pivot <- train_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
-                                               values_from = P6040,#edad 
-                                               names_prefix = "edad",
-                                               values_fill = 0)
+                                              values_from = P6040,#edad 
+                                             names_prefix = "edad",
+                                              values_fill = 0)
 
 edad_pivot <- select(edad_pivot,
-                     id,
-                     edad1,
-                     edad2,
-                     edad3,
-                     edad4,
-                     edad5,
-                     edad6,
-                     edad7,
-                     edad8,
-                     edad9) 
+                  id,
+                  edad1,
+                  edad2,
+                  edad3,
+                  edad4,
+                  edad5,
+                  edad6,
+                  edad7,
+                  edad8,
+                  edad9) 
 
 horas_trabajadas_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
-                                                         values_from = P6800, 
-                                                         names_prefix = "ht",
-                                                         values_fill = 0)
+                                                        values_from = P6800, 
+                                                       names_prefix = "ht",
+                                                        values_fill = 0)
 
 
 horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
-                                  id,
-                                  ht1,
-                                  ht2,
-                                  ht3,
-                                  ht4,
-                                  ht5,
-                                  ht6,
-                                  ht7,
-                                  ht8,
-                                  ht9)
+                  id,
+                  ht1,
+                  ht2,
+                  ht3,
+                  ht4,
+                  ht5,
+                  ht6,
+                  ht7,
+                  ht8,
+                  ht9)
 
 oficio_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
-                                               values_from = Oficio, 
-                                               names_prefix = "of",
-                                               values_fill = 0)
+                                              values_from = Oficio, 
+                                             names_prefix = "of",
+                                              values_fill = 0)
 
 oficio_pivot <- select (oficio_pivot,
-                        id,
-                        of1,
-                        of2,
-                        of3,
-                        of4,
-                        of5,
-                        of6,
-                        of7,
-                        of8,
-                        of9)
+                  id,
+                  of1,
+                  of2,
+                  of3,
+                  of4,
+                  of5,
+                  of6,
+                  of7,
+                  of8,
+                  of9)
 
 educ_pivot <- train_personas %>% pivot_wider(names_from = P6050, 
-                                             values_from = P6210, 
-                                             names_prefix = "educ",
-                                             values_fill = 0)
+                                                  values_from = P6210, 
+                                                  names_prefix = "educ",
+                                                  values_fill = 0)
 
 
 educ_pivot <- select (educ_pivot,
-                      id,
-                      educ1,
-                      educ2,
-                      educ3,
-                      educ4,
-                      educ5,
-                      educ6,
-                      educ7,
-                      educ8,
-                      educ9)
+                  id,
+                  educ1,
+                  educ2,
+                  educ3,
+                  educ4,
+                  educ5,
+                  educ6,
+                  educ7,
+                  educ8,
+                  educ9)
 
 #Como de cada tipo de persona pueden haber varios en el hogar, 
 #se agregan los casos por tipo de persona segun la función
@@ -608,11 +608,11 @@ library(ggplot2)
 library(ggpubr)
 
 figuras_3_y_4 <- ggarrange(grafica_3, grafica_4,
-                           labels = c("A", "B"),
-                           ncol = 2, nrow = 1)
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
 # Ver figura
 figuras_3_y_4
-
+ 
 #2.7. Identificar variables importantes en modelo de clasificación---- 
 
 # Se cargan las librerías necesarias
@@ -685,74 +685,74 @@ summary(test_personas$P6100)#Regimenes de seguridad social en salud #126064
 #Se hace un pivot de variables del test personas
 
 edad_pivot <- test_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
-                                              values_from = P6040,#edad 
-                                              names_prefix = "edad",
-                                              values_fill = 0)
+                                               values_from = P6040,#edad 
+                                               names_prefix = "edad",
+                                               values_fill = 0)
 
 edad_pivot <- select (edad_pivot,
-                      id,
-                      edad1,
-                      edad2,
-                      edad3,
-                      edad4,
-                      edad5,
-                      edad6,
-                      edad7,
-                      edad8,
-                      edad9)
+                                id,
+                                edad1,
+                                edad2,
+                                edad3,
+                                edad4,
+                                edad5,
+                                edad6,
+                                edad7,
+                                edad8,
+                                edad9)
 
 horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                                        values_from = P6800, 
-                                                        names_prefix = "ht",
-                                                        values_fill = 0)
+                                                         values_from = P6800, 
+                                                         names_prefix = "ht",
+                                                         values_fill = 0)
 
 
 horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
-                                  id,
-                                  ht1,
-                                  ht2,
-                                  ht3,
-                                  ht4,
-                                  ht5,
-                                  ht6,
-                                  ht7,
-                                  ht8,
-                                  ht9)
+                                            id,
+                                            ht1,
+                                            ht2,
+                                            ht3,
+                                            ht4,
+                                            ht5,
+                                            ht6,
+                                            ht7,
+                                            ht8,
+                                            ht9)
 
 oficio_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                              values_from = Oficio, 
-                                              names_prefix = "of",
-                                              values_fill = 0)
+                                               values_from = Oficio, 
+                                               names_prefix = "of",
+                                               values_fill = 0)
 
 oficio_pivot <- select (oficio_pivot,
-                        id,
-                        of1,
-                        of2,
-                        of3,
-                        of4,
-                        of5,
-                        of6,
-                        of7,
-                        of8,
-                        of9)
+                                  id,
+                                  of1,
+                                  of2,
+                                  of3,
+                                  of4,
+                                  of5,
+                                  of6,
+                                  of7,
+                                  of8,
+                                  of9)
 
 educ_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                            values_from = P6210, 
-                                            names_prefix = "educ",
-                                            values_fill = 0)
+                                             values_from = P6210, 
+                                             names_prefix = "educ",
+                                             values_fill = 0)
 
 
 educ_pivot <- select (educ_pivot,
-                      id,
-                      educ1,
-                      educ2,
-                      educ3,
-                      educ4,
-                      educ5,
-                      educ6,
-                      educ7,
-                      educ8,
-                      educ9)
+                                id,
+                                educ1,
+                                educ2,
+                                educ3,
+                                educ4,
+                                educ5,
+                                educ6,
+                                educ7,
+                                educ8,
+                                educ9)
 
 #Como de cada tipo de persona pueden haber varios en el hogar, 
 #se agregan los casos por tipo de persona segun la función
@@ -2493,6 +2493,7 @@ export(submit,"./predictions_garcia_molano_villa_c12_r23.csv")
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 
 
