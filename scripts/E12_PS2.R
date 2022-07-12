@@ -332,11 +332,11 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 3. MODELOS DE PREDICCIÓN DE INGRESOS----
+# 4. MODELOS DE PREDICCIÓN DE INGRESOS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-#3.1. Carga de la base de datos----
+##4.1. Carga de la base de datos----
 
 #se carga la base ajustada
 setwd("~/GitHub/MECA_BD_PS2")
@@ -349,7 +349,7 @@ train_h <- train_h %>% mutate (edadjf_cua= edad_p1*edad_p1)
 #NOTA: Se eliminan las filas  que tienen Inf de la variable ln_ing (revisar cuando se termine el P2)
 train_h <- train_h[is.finite(train_h$ln_ing), ]
 
-##3.2. Partición de la base de datos en tres----
+##4.2. Partición de la base de datos en tres----
 
 #La base de datos Train se divide en tres particiones:
 # Tr_train: Entrenar el modelo
@@ -372,78 +372,357 @@ split2 <- createDataPartition(other$Pobre, p = 1/3)[[1]]
 Tr_eval <- other[ split2,]
 Tr_test <- other[-split2,]
 
-#3.3. Prueba modelo de regresión
+
+##4.3. Modelos de regresión ----
 
 require("stargazer")
 
-# modelo1 <- as.formula (Ingtotug ~ Dominio+
-#                          mujer_jf_h+
-#                          edad_p1+
-#                          edad_p2+
-#                          edad_p3+
-#                          edad_p4+
-#                          edad_p5+
-#                          edadjf_cua+
-#                          ht_p1+
-#                          ht_p2+
-#                          ht_p3+
-#                          of_p1+
-#                          of_p3+
-#                          hijos+
-#                          pj_jf_sintrabajo+
-#                          P5000+
-#                          P5010+
-#                          P5090+
-#                          educ_p1+
-#                          educ_p2+
-#                          educ_p3+
-#                          Npersug+
-#                          jf_sub)
+modelo1 <- as.formula (Ingtotug ~ Clase+
+                         mujer_jf_h+
+                         edad_p1+
+                         edad_p2+
+                         edad_p3+
+                         edad_p4+
+                         edad_p5+
+                         edadjf_cua+
+                         ht_p1+
+                         ht_p2+
+                         ht_p3+
+                         of_p1+
+                         of_p3+
+                         hijos+
+                         pj_jf_sintrabajo+
+                         P5000+
+                         P5010+
+                         P5090+
+                         educ_p1+
+                         educ_p2+
+                         educ_p3+
+                         Npersug+
+                         jf_sub)
+
+modelo2 <- as.formula (Ingtotug ~ Clase+
+                         edad_p1+
+                         edadjf_cua+
+                         ht_p1+
+                         ht_p2+
+                         ht_p3+
+                         of_p1+
+                         hijos+
+                         pj_jf_sintrabajo+
+                         P5000+
+                         P5090+
+                         educ_p3+
+                         Npersug+
+                         jf_sub)
+
+modelo3 <- as.formula (Ingtotug ~ Npersug + P5090 + P5000 + edad_p1 +
+                         mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + 
+                         hijos + ht_p1 + pj_jf_sintrabajo)
+
 
 reg1<-lm(modelo1,Tr_train)
+reg2<-lm(modelo2,Tr_train)
+reg3<-lm(modelo3,Tr_train)
+
 stargazer(reg1,type="text")
+stargazer(reg2,type="text")
+stargazer(reg3,type="text")
 
-#3.4. Prueba estimación MSE
+#Entrenamiento de modelos CV K-Fold
 
-modelo_estimado <- train(modelo1,
+modelo_estimado1 <- train(modelo1,
                          data = Tr_train,
-                         trControl=trainControl(method="cv",number=5),
+                         trControl=trainControl(method="cv",number=10),
                          method="lm")
 
+modelo_estimado2 <- train(modelo2,
+                          data = Tr_train,
+                          trControl=trainControl(method="cv",number=10),
+                          method="lm")
 
-modelo_predicho <- predict(modelo_estimado,newdata = Tr_test )
+modelo_estimado3 <- train(modelo3,
+                          data = Tr_train,
+                          trControl=trainControl(method="cv",number=10),
+                          method="lm")
+
+modelo_predicho1 <- predict(modelo_estimado1,newdata = Tr_test )
+modelo_predicho2 <- predict(modelo_estimado2,newdata = Tr_test )
+modelo_predicho3 <- predict(modelo_estimado3,newdata = Tr_test )
+
 
 
 #Cálculo del MSE:
- MSE_modelo1 <- with (Tr_test,mean((Ingtotug - modelo_predicho^2)))
- 
+MSE_modelo1 <- with (Tr_test,mean((Ingtotug - modelo_predicho1)^2))
+MSE_modelo2 <- with (Tr_test,mean((Ingtotug - modelo_predicho2)^2))
+MSE_modelo3 <- with (Tr_test,mean((Ingtotug - modelo_predicho3)^2))
+
+MSE_modelo1
+MSE_modelo2
+MSE_modelo3
+
+
 #Guardar resultado de logaritmo de ingreso en la base
 # Tr_test$log_y <- modelo_predicho
 
 #Pasar el logaitmo del ingreso a ingreso con exponencial en la misma base
- Tr_test$y <- modelo_predicho 
- #Tr_test$y <- exp(Tr_test$log_y)
 
- #Determinar si es pobre o no
+#Guardar los resultados en la base de Test
+Tr_test$y1 <- modelo_predicho1
+Tr_test$y2 <- modelo_predicho2
+Tr_test$y3 <- modelo_predicho3
+
+#Tr_test$y <- exp(Tr_test$log_y)
+
+#Determinar si es pobre o no
  
- Tr_test$pobre_clas_ing <- factor(if_else( Tr_test$y < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ing1 <- factor(if_else( Tr_test$y1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ing2 <- factor(if_else( Tr_test$y2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ing3 <- factor(if_else( Tr_test$y3 < Tr_test$Lp, "Pobre", "No Pobre"))
  
- summary(Tr_test$pobre_clas_ing)
+summary(Tr_test$pobre_clas_ing1)
+summary(Tr_test$pobre_clas_ing2)
+summary(Tr_test$pobre_clas_ing3)
  
- confusionMatrix(data=Tr_test$pobre_clas_ing, 
+cm1 <- confusionMatrix(data=Tr_test$pobre_clas_ing1, 
                                  reference=Tr_test$Pobre , 
                                  mode="sens_spec" , positive="Pobre")
+
+cm2 <- confusionMatrix(data=Tr_test$pobre_clas_ing2, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+
+cm3 <- confusionMatrix(data=Tr_test$pobre_clas_ing3, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
  
- 
- ## ROC
- 
- pred_m1 <- prediction(Tr_test$pobre_clas_ing, Tr_test$Pobre)
- 
- roc_ROCRm1 <- performance(pred_m1,"tpr","fpr")
- 
- plot(roc_ROCRm1, main = "ROC curve", colorize = FALSE, col="blue")
- 
- abline(a = 0, b = 1)
+
+##4.4. Lasso, Ridge, Elastic Net de los modelos ----
+
+### Lasso ----
+
+lambda <- 10^seq(-2, 3, length = 200)
+
+lasso1 <- train(modelo1,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 1,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+lasso2 <- train(modelo2,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 1,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+lasso3 <- train(modelo3,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 1,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+lasso1
+lasso2
+lasso3
+
+mod_pred_lass1 <- predict(lasso1,newdata = Tr_test )
+mod_pred_lass2 <- predict(lasso2,newdata = Tr_test )
+mod_pred_lass3 <- predict(lasso3,newdata = Tr_test )
+
+Tr_test$y_lass1 <- mod_pred_lass1
+Tr_test$y_lass2 <- mod_pred_lass2
+Tr_test$y_lass3 <- mod_pred_lass3
+
+Tr_test$pobre_clas_lass1 <- factor(if_else( Tr_test$y_lass1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_lass2 <- factor(if_else( Tr_test$y_lass2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_lass3 <- factor(if_else( Tr_test$y_lass3 < Tr_test$Lp, "Pobre", "No Pobre"))
+
+summary(Tr_test$pobre_clas_lass1)
+summary(Tr_test$pobre_clas_lass2)
+summary(Tr_test$pobre_clas_lass3)
+
+cm_lass1 <- confusionMatrix(data=Tr_test$pobre_clas_lass1, 
+                       reference=Tr_test$Pobre , 
+                       mode="sens_spec" , positive="Pobre")
+
+cm_lass2 <- confusionMatrix(data=Tr_test$pobre_clas_lass2, 
+                            reference=Tr_test$Pobre , 
+                            mode="sens_spec" , positive="Pobre")
+
+cm_lass3 <- confusionMatrix(data=Tr_test$pobre_clas_lass3, 
+                            reference=Tr_test$Pobre , 
+                            mode="sens_spec" , positive="Pobre")
+
+
+
+###Ridge ----
+
+ridge1 <- train(modelo1,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 0,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+ridge2 <- train(modelo2,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 0,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+ridge3 <- train(modelo3,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 0,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+
+ridge1
+ridge2
+ridge3
+
+mod_pred_ridge1 <- predict(ridge1,newdata = Tr_test )
+mod_pred_ridge2 <- predict(ridge2,newdata = Tr_test )
+mod_pred_ridge3 <- predict(ridge3,newdata = Tr_test )
+
+Tr_test$y_ridge1 <- mod_pred_ridge1
+Tr_test$y_ridge2 <- mod_pred_ridge2
+Tr_test$y_ridge3 <- mod_pred_ridge3
+
+Tr_test$pobre_clas_ridge1 <- factor(if_else( Tr_test$y_ridge1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ridge2 <- factor(if_else( Tr_test$y_ridge2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ridge3 <- factor(if_else( Tr_test$y_ridge3 < Tr_test$Lp, "Pobre", "No Pobre"))
+
+summary(Tr_test$pobre_clas_ridge1)
+summary(Tr_test$pobre_clas_ridge2)
+summary(Tr_test$pobre_clas_ridge3)
+
+cm_ridge1 <- confusionMatrix(data=Tr_test$pobre_clas_ridge1, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_ridge2 <- confusionMatrix(data=Tr_test$pobre_clas_ridge2, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_ridge3 <- confusionMatrix(data=Tr_test$pobre_clas_ridge3, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+
+
+### Elastic Net ----
+
+elnet1 <- train(modelo1,
+            data = Tr_train,
+            method = "glmnet",
+            trControl = trainControl("cv", number = 10),
+            preProcess = c("center", "scale"))
+
+elnet2 <- train(modelo2,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                preProcess = c("center", "scale"))
+
+elnet3 <- train(modelo3,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                preProcess = c("center", "scale"))
+
+elnet1
+elnet2
+elnet3
+
+mod_pred_elnet1 <- predict(elnet1,newdata = Tr_test )
+mod_pred_elnet2 <- predict(elnet2,newdata = Tr_test )
+mod_pred_elnet3 <- predict(elnet3,newdata = Tr_test )
+
+Tr_test$y_elnet1 <- mod_pred_elnet1
+Tr_test$y_elnet2 <- mod_pred_elnet2
+Tr_test$y_elnet3 <- mod_pred_elnet3
+
+Tr_test$pobre_clas_elnet1 <- factor(if_else( Tr_test$y_elnet1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_elnet2 <- factor(if_else( Tr_test$y_elnet2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_elnet3 <- factor(if_else( Tr_test$y_elnet3 < Tr_test$Lp, "Pobre", "No Pobre"))
+
+summary(Tr_test$pobre_clas_elnet1)
+summary(Tr_test$pobre_clas_elnet2)
+summary(Tr_test$pobre_clas_elnet3)
+
+cm_elnet1 <- confusionMatrix(data=Tr_test$pobre_clas_elnet1, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_elnet2 <- confusionMatrix(data=Tr_test$pobre_clas_elnet2, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_elnet3 <- confusionMatrix(data=Tr_test$pobre_clas_elnet3, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+
+
+### Comparación de los modelos ----
+
+models <- list(lasso1,lasso2,lasso3,ridge1,ridge2,ridge3,elnet1,elnet2,elnet3)
+models <- list(lm1=modelo_estimado1,lasso1=lasso1,ridge1=ridge1,elnet1=elnet1)
+resamples(models) %>% summary(metric = "RMSE")
+
+
+cm1
+cm2
+cm3
+cm_lass1
+cm_lass2
+cm_lass3
+cm_ridge1
+cm_ridge2
+cm_ridge3
+cm_elnet1
+cm_elnet2
+cm_elnet3
+
+
+##4.5. Exportación final ----
+
+modelo_final_ing <- elnet1
+
+setwd("~/GitHub/MECA_BD_PS2")
+test_h <-readRDS("./stores/test_h_si.rds")
+
+nrow(test_h)
+
+
+## Predecir el modelo final:
+
+#TEMPORAL!
+test_h <- test_h[!(test_h$P5000=="43"),]
+test_h$jf_sub <- factor(test_h$jf_sub,levels=c("0","1"),labels=c("jefe de hogar no subsidiado","jefe de hogar subsidiado"))
+
+test_h$edadjf_cua <- test_h$edad_p1^2
+
+test_h$pred_ing_final <- predict(modelo_final_ing,newdata = test_h)
+test_h$Pobre_income <- if_else(test_h$pred_ing_final < test_h$Lp,1,0)
+
+
+#submit  <-  test_h[,c("id","Pobre_classification")]
+
+submit  <-  test_h[,c("id","Pobre_income")]
+elnet1
+
+## Guardar el .CSV
+setwd("~/GitHub/MECA_BD_PS2/document")
+export(submit,"./predictions_garcia_molano_villa_c12_r23.csv")
+
+
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
