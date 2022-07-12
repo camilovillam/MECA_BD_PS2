@@ -990,6 +990,8 @@ cmat_lasso_sens_downs <- confusionMatrix(data=Tr_test$lasso_sens_downs_clas,
                 mode="sens_spec" , positive="Pobre")
 
 
+cmat_lasso_sens_downs
+
 # ROC
 pred_lasso_sens_ups <- prediction(Tr_test$lasso_sens_ups, Tr_test$Pobre)
 pred_lasso_sens_downs <- prediction(Tr_test$lasso_sens_downs, Tr_test$Pobre)
@@ -999,7 +1001,7 @@ roc_ROCR_lasso_sens_downs <- performance(pred_lasso_sens_downs,"tpr","fpr")
 
 plot(roc_ROCR_lasso_sens_ups, main = "ROC curve", add=TRUE, colorize = F,col="black")
 plot(roc_ROCR_lasso_sens_downs, main = "ROC curve", add=TRUE, colorize = F,col="yellow")
-
+plot(roc_ROCR_lasso_sens_downs, main = "ROC curve", add=FALSE, colorize = T)
 
 # AUC
 auc_roc_lasso_sens_ups  <-  performance(pred_lasso_sens_ups, measure = "auc")
@@ -1213,6 +1215,8 @@ c_matr_tree_downs
 #Se presentan las matrices de confusión de los diferentes modelos,
 #para elegir el mejor
 
+#Matrices de confusión completas
+
 cmat_lg_1
 cmat_lg_2
 cmat_lg_3
@@ -1234,6 +1238,70 @@ c_matr_tree_ups
 c_matr_tree_downs
 
 
+#Tabla de comparación:
+
+#Guardamos todas las matrices de confusión en una lista:
+
+Matrices_conf <- vector("list",19)
+
+# Matrices_conf <- list(cmat_lg_1,
+#                       cmat_lg_2,
+#                       cmat_lg_3,
+#                       cmat_lg_4,
+#                       cmat_lg_5,
+#                       cm_caret_coff_opt,
+#                       confmat_mod_sel_ups,
+#                       confmat_mod_sel_downs,
+#                       cmat_lasso_sens,
+#                       cmat_lasso_roc,
+#                       cmat_lasso_acc,
+#                       cmat_lasso_sens_ups,
+#                       cmat_lasso_sens_downs,
+#                       cmat_xgboost,
+#                       cmat_xgboost_downs,
+#                       cmat_xgboost_ups,
+#                       c_matr_tree,
+#                       c_matr_tree_ups,
+#                       c_matr_tree_downs)
+
+Matrices_conf <- list(cmat_lg_1,
+                      cmat_lg_2,
+                      cmat_lg_3,
+                      cmat_lg_4,
+                      cmat_lg_5,
+                      cm_caret_coff_opt,
+                      confmat_mod_sel_ups,
+                      confmat_mod_sel_downs,
+                      cmat_lasso_sens_downs,
+                      cmat_xgboost_downs,
+                      c_matr_tree,
+                      c_matr_tree_ups,
+                      c_matr_tree_downs)
+
+
+tabla_comp_clasif <- matrix(rep(0,19*9),nrow=19,ncol=9)
+colnames(tabla_comp_clasif) <- c("Modelo","TN","FN","TP","FP","Sensitivity","Specificity","Accuracy")
+
+#Ejemplo para una matriz de confusión:
+
+tabla_comp_clasif[1,1] <- "Lasso 1"
+tabla_comp_clasif[1,2] <- 
+tabla_comp_clasif[1,3] <- 
+tabla_comp_clasif[1,4] <- 
+tabla_comp_clasif[1,5] <- 
+tabla_comp_clasif[1,6] <- Matrices_conf[[1]]@byClass$Sensitivity #Sensitivity
+tabla_comp_clasif[1,7] <- #Specificity
+tabla_comp_clasif[1,8] <- #Accuracy
+tabla_comp_clasif[1,9] <- #Puntaje final (75% / 25%)
+
+  
+acc_mod1 <- Matrices_conf[[1]]$byClass$Sensitivity
+
+sens_mod1 <- cmat_lg_1$byClass$Sensitivity
+
+  
+view(tabla_comp_clasif)
+tabla_comp_clasif
 
 ##3.7. Exportación final ----
 
