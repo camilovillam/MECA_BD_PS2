@@ -342,12 +342,12 @@ boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Hora
 setwd("~/GitHub/MECA_BD_PS2")
 train_h <-readRDS("./stores/train_h_si.rds")
 
-#se crea la variable logaritmo de ingresos
-train_h$ln_ing <- log(train_h$Ingtotug)
+#se crean variables
+#train_h$ln_ing <- log(train_h$Ingtotug)
 train_h <- train_h %>% mutate (edadjf_cua= edad_p1*edad_p1)
 
 #NOTA: Se eliminan las filas  que tienen Inf de la variable ln_ing (revisar cuando se termine el P2)
-train_h <- train_h[is.finite(train_h$ln_ing), ]
+#train_h <- train_h[is.finite(train_h$ln_ing), ]
 
 ##4.2. Partición de la base de datos en tres----
 
@@ -377,14 +377,13 @@ Tr_test <- other[-split2,]
 
 require("stargazer")
 
-modelo1 <- as.formula (Ingtotug ~ Clase+
+modelo1 <- as.formula (Ingtotug ~ Clase+Dominio+
                          mujer_jf_h+
                          edad_p1+
                          edad_p2+
                          edad_p3+
                          edad_p4+
                          edad_p5+
-                         edadjf_cua+
                          ht_p1+
                          ht_p2+
                          ht_p3+
@@ -399,26 +398,18 @@ modelo1 <- as.formula (Ingtotug ~ Clase+
                          educ_p2+
                          educ_p3+
                          Npersug+
-                         jf_sub)
+                         jf_sub+
+                         jf_sintrabajo)
 
-modelo2 <- as.formula (Ingtotug ~ Clase+
-                         edad_p1+
-                         edadjf_cua+
-                         ht_p1+
-                         ht_p2+
-                         ht_p3+
-                         of_p1+
-                         hijos+
-                         pj_jf_sintrabajo+
-                         P5000+
-                         P5090+
-                         educ_p3+
-                         Npersug+
-                         jf_sub)
+modelo2 <- as.formula (Ingtotug ~ Dominio+Npersug:P5010 + P5090 + P5000 + edad_p1 + edadjf_cua+ 
+                         edad_p2 + edad_p3 + edad_p4 + edad_p5 + edad_p6 + edad_p7 + edad_p8 + edad_p9+
+                         mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + ht_p2 + ht_p3 + ht_p4 +
+                         ht_p5 + ht_p6 + ht_p7 + ht_p8+ ht_p9 + jf_sub + 
+                         hijos + ht_p1 + pj_jf_sintrabajo + jf_sintrabajo)
 
 modelo3 <- as.formula (Ingtotug ~ Npersug + P5090 + P5000 + edad_p1 +
                          mujer_jf_h + educ_p1 + educ_p3 + ht_p1 + jf_sub + 
-                         hijos + ht_p1 + pj_jf_sintrabajo)
+                         hijos + ht_p1 + pj_jf_sintrabajo +jf_sintrabajo+pj_jf_ofhogar)
 
 
 reg1<-lm(modelo1,Tr_train)
@@ -693,7 +684,7 @@ cm_elnet3
 
 ##4.5. Exportación final ----
 
-modelo_final_ing <- elnet1
+modelo_final_ing <- elnet2
 
 setwd("~/GitHub/MECA_BD_PS2")
 test_h <-readRDS("./stores/test_h_si.rds")
