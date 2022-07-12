@@ -84,10 +84,10 @@ p_load(rio,
 predict <- stats::predict
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
+# 1. CARGUE DE LAS BASES DE DATOS Y EXPLORACIÓN INICIAL----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#1.1. Cargue de las bases de datos ---- 
+##1.1. Cargue de las bases de datos ---- 
 
 setwd("~/GitHub/MECA_BD_PS2")
 submission_template <-read.csv("./stores/20220703_data/submission_template.csv")
@@ -97,9 +97,9 @@ train_hogares <-readRDS("./stores/20220703_data/train_hogares.rds")
 train_personas <-readRDS("./stores/20220703_data/train_personas.rds")
 
 
-#1.2. Exploración incial de los datos ----
+##1.2. Exploración incial de los datos ----
 
-#Exploración de las bases de datos:
+##Exploración de las bases de datos:
 skim(train_hogares)
 skim(test_hogares)
 skim(train_personas)
@@ -608,11 +608,11 @@ library(ggplot2)
 library(ggpubr)
 
 figuras_3_y_4 <- ggarrange(grafica_3, grafica_4,
-                           labels = c("A", "B"),
-                           ncol = 2, nrow = 1)
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
 # Ver figura
 figuras_3_y_4
-
+ 
 #2.7. Identificar variables importantes en modelo de clasificación---- 
 
 # Se cargan las librerías necesarias
@@ -685,74 +685,74 @@ summary(test_personas$P6100)#Regimenes de seguridad social en salud #126064
 #Se hace un pivot de variables del test personas
 
 edad_pivot <- test_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
-                                              values_from = P6040,#edad 
-                                              names_prefix = "edad",
-                                              values_fill = 0)
+                                               values_from = P6040,#edad 
+                                               names_prefix = "edad",
+                                               values_fill = 0)
 
 edad_pivot <- select (edad_pivot,
-                      id,
-                      edad1,
-                      edad2,
-                      edad3,
-                      edad4,
-                      edad5,
-                      edad6,
-                      edad7,
-                      edad8,
-                      edad9)
+                                id,
+                                edad1,
+                                edad2,
+                                edad3,
+                                edad4,
+                                edad5,
+                                edad6,
+                                edad7,
+                                edad8,
+                                edad9)
 
 horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                                        values_from = P6800, 
-                                                        names_prefix = "ht",
-                                                        values_fill = 0)
+                                                         values_from = P6800, 
+                                                         names_prefix = "ht",
+                                                         values_fill = 0)
 
 
 horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
-                                  id,
-                                  ht1,
-                                  ht2,
-                                  ht3,
-                                  ht4,
-                                  ht5,
-                                  ht6,
-                                  ht7,
-                                  ht8,
-                                  ht9)
+                                            id,
+                                            ht1,
+                                            ht2,
+                                            ht3,
+                                            ht4,
+                                            ht5,
+                                            ht6,
+                                            ht7,
+                                            ht8,
+                                            ht9)
 
 oficio_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                              values_from = Oficio, 
-                                              names_prefix = "of",
-                                              values_fill = 0)
+                                               values_from = Oficio, 
+                                               names_prefix = "of",
+                                               values_fill = 0)
 
 oficio_pivot <- select (oficio_pivot,
-                        id,
-                        of1,
-                        of2,
-                        of3,
-                        of4,
-                        of5,
-                        of6,
-                        of7,
-                        of8,
-                        of9)
+                                  id,
+                                  of1,
+                                  of2,
+                                  of3,
+                                  of4,
+                                  of5,
+                                  of6,
+                                  of7,
+                                  of8,
+                                  of9)
 
 educ_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                            values_from = P6210, 
-                                            names_prefix = "educ",
-                                            values_fill = 0)
+                                             values_from = P6210, 
+                                             names_prefix = "educ",
+                                             values_fill = 0)
 
 
 educ_pivot <- select (educ_pivot,
-                      id,
-                      educ1,
-                      educ2,
-                      educ3,
-                      educ4,
-                      educ5,
-                      educ6,
-                      educ7,
-                      educ8,
-                      educ9)
+                                id,
+                                educ1,
+                                educ2,
+                                educ3,
+                                educ4,
+                                educ5,
+                                educ6,
+                                educ7,
+                                educ8,
+                                educ9)
 
 #Como de cada tipo de persona pueden haber varios en el hogar, 
 #se agregan los casos por tipo de persona segun la función
@@ -2054,16 +2054,16 @@ colnames(tabla_comp_clasif) <- c("Modelo","TN","FN","TP","FP","Sensitivity","Spe
 
 tabla_comp_clasif[1,1] <- "Lasso 1"
 tabla_comp_clasif[1,2] <- 
-  tabla_comp_clasif[1,3] <- 
-  tabla_comp_clasif[1,4] <- 
-  tabla_comp_clasif[1,5] <- 
-  tabla_comp_clasif[1,6] <- Matrices_conf[[1]]@byClass$Sensitivity #Sensitivity
+tabla_comp_clasif[1,3] <- 
+tabla_comp_clasif[1,4] <- 
+tabla_comp_clasif[1,5] <- 
+tabla_comp_clasif[1,6] <- Matrices_conf[[1]]@byClass$Sensitivity #Sensitivity
 tabla_comp_clasif[1,7] <- #Specificity
-  tabla_comp_clasif[1,8] <- #Accuracy
-  tabla_comp_clasif[1,9] <- #Puntaje final (75% / 25%)
+tabla_comp_clasif[1,8] <- #Accuracy
+tabla_comp_clasif[1,9] <- #Puntaje final (75% / 25%)
   
   
-  acc_mod1 <- Matrices_conf[[1]]$byClass$Sensitivity
+acc_mod1 <- Matrices_conf[[1]]$byClass$Sensitivity
 
 sens_mod1 <- cmat_lg_1$byClass$Sensitivity
 
@@ -2659,8 +2659,274 @@ Matriz_elnet1 <- confusionMatrix(data=Tr_test$clasif_pobre_elnet1,
 ##SE COMPARAN LOS MODELOS
 models <- list(lasso1, Model_ridge1, Model_1_elnet1)
 
+MSE_modelo1
+MSE_modelo2
+MSE_modelo3
+
+
+#Guardar resultado de logaritmo de ingreso en la base
+# Tr_test$log_y <- modelo_predicho
+
+#Pasar el logaitmo del ingreso a ingreso con exponencial en la misma base
+
+#Guardar los resultados en la base de Test
+Tr_test$y1 <- modelo_predicho1
+Tr_test$y2 <- modelo_predicho2
+Tr_test$y3 <- modelo_predicho3
+
+#Tr_test$y <- exp(Tr_test$log_y)
+
+#Determinar si es pobre o no
+ 
+Tr_test$pobre_clas_ing1 <- factor(if_else( Tr_test$y1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ing2 <- factor(if_else( Tr_test$y2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ing3 <- factor(if_else( Tr_test$y3 < Tr_test$Lp, "Pobre", "No Pobre"))
+ 
+summary(Tr_test$pobre_clas_ing1)
+summary(Tr_test$pobre_clas_ing2)
+summary(Tr_test$pobre_clas_ing3)
+ 
+cm1 <- confusionMatrix(data=Tr_test$pobre_clas_ing1, 
+                                 reference=Tr_test$Pobre , 
+                                 mode="sens_spec" , positive="Pobre")
+
+cm2 <- confusionMatrix(data=Tr_test$pobre_clas_ing2, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+
+cm3 <- confusionMatrix(data=Tr_test$pobre_clas_ing3, 
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+ 
+
+##5.4. Lasso, Ridge, Elastic Net de los modelos ----
+
+### Lasso ----
+
+lambda <- 10^seq(-2, 3, length = 200)
+
+lasso1 <- train(modelo1,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 1,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+lasso2 <- train(modelo2,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 1,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+lasso3 <- train(modelo3,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 1,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+lasso1
+lasso2
+lasso3
+
+mod_pred_lass1 <- predict(lasso1,newdata = Tr_test )
+mod_pred_lass2 <- predict(lasso2,newdata = Tr_test )
+mod_pred_lass3 <- predict(lasso3,newdata = Tr_test )
+
+Tr_test$y_lass1 <- mod_pred_lass1
+Tr_test$y_lass2 <- mod_pred_lass2
+Tr_test$y_lass3 <- mod_pred_lass3
+
+Tr_test$pobre_clas_lass1 <- factor(if_else( Tr_test$y_lass1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_lass2 <- factor(if_else( Tr_test$y_lass2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_lass3 <- factor(if_else( Tr_test$y_lass3 < Tr_test$Lp, "Pobre", "No Pobre"))
+
+summary(Tr_test$pobre_clas_lass1)
+summary(Tr_test$pobre_clas_lass2)
+summary(Tr_test$pobre_clas_lass3)
+
+cm_lass1 <- confusionMatrix(data=Tr_test$pobre_clas_lass1, 
+                       reference=Tr_test$Pobre , 
+                       mode="sens_spec" , positive="Pobre")
+
+cm_lass2 <- confusionMatrix(data=Tr_test$pobre_clas_lass2, 
+                            reference=Tr_test$Pobre , 
+                            mode="sens_spec" , positive="Pobre")
+
+cm_lass3 <- confusionMatrix(data=Tr_test$pobre_clas_lass3, 
+                            reference=Tr_test$Pobre , 
+                            mode="sens_spec" , positive="Pobre")
+
+
+
+###Ridge ----
+
+ridge1 <- train(modelo1,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 0,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+ridge2 <- train(modelo2,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 0,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+ridge3 <- train(modelo3,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                tuneGrid = expand.grid(alpha = 0,lambda=lambda),
+                preProcess = c("center", "scale"))
+
+
+ridge1
+ridge2
+ridge3
+
+mod_pred_ridge1 <- predict(ridge1,newdata = Tr_test )
+mod_pred_ridge2 <- predict(ridge2,newdata = Tr_test )
+mod_pred_ridge3 <- predict(ridge3,newdata = Tr_test )
+
+Tr_test$y_ridge1 <- mod_pred_ridge1
+Tr_test$y_ridge2 <- mod_pred_ridge2
+Tr_test$y_ridge3 <- mod_pred_ridge3
+
+Tr_test$pobre_clas_ridge1 <- factor(if_else( Tr_test$y_ridge1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ridge2 <- factor(if_else( Tr_test$y_ridge2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ridge3 <- factor(if_else( Tr_test$y_ridge3 < Tr_test$Lp, "Pobre", "No Pobre"))
+
+summary(Tr_test$pobre_clas_ridge1)
+summary(Tr_test$pobre_clas_ridge2)
+summary(Tr_test$pobre_clas_ridge3)
+
+cm_ridge1 <- confusionMatrix(data=Tr_test$pobre_clas_ridge1, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_ridge2 <- confusionMatrix(data=Tr_test$pobre_clas_ridge2, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_ridge3 <- confusionMatrix(data=Tr_test$pobre_clas_ridge3, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+
+
+### Elastic Net ----
+
+elnet1 <- train(modelo1,
+            data = Tr_train,
+            method = "glmnet",
+            trControl = trainControl("cv", number = 10),
+            preProcess = c("center", "scale"))
+
+elnet2 <- train(modelo2,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                preProcess = c("center", "scale"))
+
+elnet3 <- train(modelo3,
+                data = Tr_train,
+                method = "glmnet",
+                trControl = trainControl("cv", number = 10),
+                preProcess = c("center", "scale"))
+
+elnet1
+elnet2
+elnet3
+
+mod_pred_elnet1 <- predict(elnet1,newdata = Tr_test )
+mod_pred_elnet2 <- predict(elnet2,newdata = Tr_test )
+mod_pred_elnet3 <- predict(elnet3,newdata = Tr_test )
+
+Tr_test$y_elnet1 <- mod_pred_elnet1
+Tr_test$y_elnet2 <- mod_pred_elnet2
+Tr_test$y_elnet3 <- mod_pred_elnet3
+
+Tr_test$pobre_clas_elnet1 <- factor(if_else( Tr_test$y_elnet1 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_elnet2 <- factor(if_else( Tr_test$y_elnet2 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_elnet3 <- factor(if_else( Tr_test$y_elnet3 < Tr_test$Lp, "Pobre", "No Pobre"))
+
+summary(Tr_test$pobre_clas_elnet1)
+summary(Tr_test$pobre_clas_elnet2)
+summary(Tr_test$pobre_clas_elnet3)
+
+cm_elnet1 <- confusionMatrix(data=Tr_test$pobre_clas_elnet1, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_elnet2 <- confusionMatrix(data=Tr_test$pobre_clas_elnet2, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+cm_elnet3 <- confusionMatrix(data=Tr_test$pobre_clas_elnet3, 
+                             reference=Tr_test$Pobre , 
+                             mode="sens_spec" , positive="Pobre")
+
+
+
+### Comparación de los modelos ----
+
+models <- list(lasso1,lasso2,lasso3,ridge1,ridge2,ridge3,elnet1,elnet2,elnet3)
+models <- list(lm1=modelo_estimado1,lasso1=lasso1,ridge1=ridge1,elnet1=elnet1)
+resamples(models) %>% summary(metric = "RMSE")
+
+
+cm1
+cm2
+cm3
+cm_lass1
+cm_lass2
+cm_lass3
+cm_ridge1
+cm_ridge2
+cm_ridge3
+cm_elnet1
+cm_elnet2
+cm_elnet3
+
+
+##5.5. Exportación final ----
+
+modelo_final_ing <- elnet2
+
+setwd("~/GitHub/MECA_BD_PS2")
+test_h <-readRDS("./stores/test_h_si.rds")
+
+nrow(test_h)
+
+
+## Predecir el modelo final:
+
+#TEMPORAL!
+test_h <- test_h[!(test_h$P5000=="43"),]
+test_h$jf_sub <- factor(test_h$jf_sub,levels=c("0","1"),labels=c("jefe de hogar no subsidiado","jefe de hogar subsidiado"))
+
+test_h$edadjf_cua <- test_h$edad_p1^2
+
+test_h$pred_ing_final <- predict(modelo_final_ing,newdata = test_h)
+test_h$Pobre_income <- if_else(test_h$pred_ing_final < test_h$Lp,1,0)
+
+
+#submit  <-  test_h[,c("id","Pobre_classification")]
+
+submit  <-  test_h[,c("id","Pobre_income")]
+elnet1
+
+## Guardar el .CSV
+setwd("~/GitHub/MECA_BD_PS2/document")
+export(submit,"./predictions_garcia_molano_villa_c12_r23.csv")
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 
