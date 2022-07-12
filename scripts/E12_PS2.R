@@ -2243,27 +2243,27 @@ Tr_test$y3 <- modelo_predicho3
 #Tr_test$y <- exp(Tr_test$log_y)
 
 #Determinar si es pobre o no
-
+ 
 Tr_test$pobre_clas_ing1 <- factor(if_else( Tr_test$y1 < Tr_test$Lp, "Pobre", "No Pobre"))
 Tr_test$pobre_clas_ing2 <- factor(if_else( Tr_test$y2 < Tr_test$Lp, "Pobre", "No Pobre"))
 Tr_test$pobre_clas_ing3 <- factor(if_else( Tr_test$y3 < Tr_test$Lp, "Pobre", "No Pobre"))
-
+ 
 summary(Tr_test$pobre_clas_ing1)
 summary(Tr_test$pobre_clas_ing2)
 summary(Tr_test$pobre_clas_ing3)
-
+ 
 cm1 <- confusionMatrix(data=Tr_test$pobre_clas_ing1, 
-                       reference=Tr_test$Pobre , 
-                       mode="sens_spec" , positive="Pobre")
+                                 reference=Tr_test$Pobre , 
+                                 mode="sens_spec" , positive="Pobre")
 
 cm2 <- confusionMatrix(data=Tr_test$pobre_clas_ing2, 
-                       reference=Tr_test$Pobre , 
-                       mode="sens_spec" , positive="Pobre")
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
 
 cm3 <- confusionMatrix(data=Tr_test$pobre_clas_ing3, 
-                       reference=Tr_test$Pobre , 
-                       mode="sens_spec" , positive="Pobre")
-
+                reference=Tr_test$Pobre , 
+                mode="sens_spec" , positive="Pobre")
+ 
 
 ##5.4. Lasso, Ridge, Elastic Net de los modelos ----
 
@@ -2313,8 +2313,8 @@ summary(Tr_test$pobre_clas_lass2)
 summary(Tr_test$pobre_clas_lass3)
 
 cm_lass1 <- confusionMatrix(data=Tr_test$pobre_clas_lass1, 
-                            reference=Tr_test$Pobre , 
-                            mode="sens_spec" , positive="Pobre")
+                       reference=Tr_test$Pobre , 
+                       mode="sens_spec" , positive="Pobre")
 
 cm_lass2 <- confusionMatrix(data=Tr_test$pobre_clas_lass2, 
                             reference=Tr_test$Pobre , 
@@ -2387,10 +2387,10 @@ cm_ridge3 <- confusionMatrix(data=Tr_test$pobre_clas_ridge3,
 ### Elastic Net ----
 
 elnet1 <- train(modelo1,
-                data = Tr_train,
-                method = "glmnet",
-                trControl = trainControl("cv", number = 10),
-                preProcess = c("center", "scale"))
+            data = Tr_train,
+            method = "glmnet",
+            trControl = trainControl("cv", number = 10),
+            preProcess = c("center", "scale"))
 
 elnet2 <- train(modelo2,
                 data = Tr_train,
