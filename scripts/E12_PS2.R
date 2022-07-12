@@ -7,7 +7,7 @@
 #Ingrid Lorena Molano
 #Camilo Villa Moreno
 
-#Julio 10, 2022
+#Julio 12, 2022
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 0. PRELIMINARES: PREPARACIÓN ESPACIO DE TRABAJO Y LIBRERÍAS----
@@ -84,10 +84,10 @@ p_load(rio,
 predict <- stats::predict
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# 1. PREPARACIÓN DE LA BASE DE DATOS Y ESTADÍSTICAS DESCRIPTIVAS----
+# 1. CARGUE DE LAS BASES DE DATOS Y EXPLORACIÓN INICIAL----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#1.1. Cargue de las bases de datos ---- 
+##1.1. Cargue de las bases de datos ---- 
 
 setwd("~/GitHub/MECA_BD_PS2")
 submission_template <-read.csv("./stores/20220703_data/submission_template.csv")
@@ -97,9 +97,9 @@ train_hogares <-readRDS("./stores/20220703_data/train_hogares.rds")
 train_personas <-readRDS("./stores/20220703_data/train_personas.rds")
 
 
-#1.2. Exploración incial de los datos ----
+##1.2. Exploración incial de los datos ----
 
-#Exploración de las bases de datos:
+##Exploración de las bases de datos:
 skim(train_hogares)
 skim(test_hogares)
 skim(train_personas)
@@ -608,11 +608,11 @@ library(ggplot2)
 library(ggpubr)
 
 figuras_3_y_4 <- ggarrange(grafica_3, grafica_4,
-                           labels = c("A", "B"),
-                           ncol = 2, nrow = 1)
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
 # Ver figura
 figuras_3_y_4
-
+ 
 #2.7. Identificar variables importantes en modelo de clasificación---- 
 
 # Se cargan las librerías necesarias
@@ -685,74 +685,74 @@ summary(test_personas$P6100)#Regimenes de seguridad social en salud #126064
 #Se hace un pivot de variables del test personas
 
 edad_pivot <- test_personas %>%  pivot_wider (names_from = P6050,#Parentezco con el jefe de hogar 
-                                              values_from = P6040,#edad 
-                                              names_prefix = "edad",
-                                              values_fill = 0)
+                                               values_from = P6040,#edad 
+                                               names_prefix = "edad",
+                                               values_fill = 0)
 
 edad_pivot <- select (edad_pivot,
-                      id,
-                      edad1,
-                      edad2,
-                      edad3,
-                      edad4,
-                      edad5,
-                      edad6,
-                      edad7,
-                      edad8,
-                      edad9)
+                                id,
+                                edad1,
+                                edad2,
+                                edad3,
+                                edad4,
+                                edad5,
+                                edad6,
+                                edad7,
+                                edad8,
+                                edad9)
 
 horas_trabajadas_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                                        values_from = P6800, 
-                                                        names_prefix = "ht",
-                                                        values_fill = 0)
+                                                         values_from = P6800, 
+                                                         names_prefix = "ht",
+                                                         values_fill = 0)
 
 
 horas_trabajadas_pivot <- select (horas_trabajadas_pivot,
-                                  id,
-                                  ht1,
-                                  ht2,
-                                  ht3,
-                                  ht4,
-                                  ht5,
-                                  ht6,
-                                  ht7,
-                                  ht8,
-                                  ht9)
+                                            id,
+                                            ht1,
+                                            ht2,
+                                            ht3,
+                                            ht4,
+                                            ht5,
+                                            ht6,
+                                            ht7,
+                                            ht8,
+                                            ht9)
 
 oficio_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                              values_from = Oficio, 
-                                              names_prefix = "of",
-                                              values_fill = 0)
+                                               values_from = Oficio, 
+                                               names_prefix = "of",
+                                               values_fill = 0)
 
 oficio_pivot <- select (oficio_pivot,
-                        id,
-                        of1,
-                        of2,
-                        of3,
-                        of4,
-                        of5,
-                        of6,
-                        of7,
-                        of8,
-                        of9)
+                                  id,
+                                  of1,
+                                  of2,
+                                  of3,
+                                  of4,
+                                  of5,
+                                  of6,
+                                  of7,
+                                  of8,
+                                  of9)
 
 educ_pivot <- test_personas %>% pivot_wider(names_from = P6050, 
-                                            values_from = P6210, 
-                                            names_prefix = "educ",
-                                            values_fill = 0)
+                                             values_from = P6210, 
+                                             names_prefix = "educ",
+                                             values_fill = 0)
 
 
 educ_pivot <- select (educ_pivot,
-                      id,
-                      educ1,
-                      educ2,
-                      educ3,
-                      educ4,
-                      educ5,
-                      educ6,
-                      educ7,
-                      educ8,
-                      educ9)
+                                id,
+                                educ1,
+                                educ2,
+                                educ3,
+                                educ4,
+                                educ5,
+                                educ6,
+                                educ7,
+                                educ8,
+                                educ9)
 
 #Como de cada tipo de persona pueden haber varios en el hogar, 
 #se agregan los casos por tipo de persona segun la función
@@ -2054,16 +2054,16 @@ colnames(tabla_comp_clasif) <- c("Modelo","TN","FN","TP","FP","Sensitivity","Spe
 
 tabla_comp_clasif[1,1] <- "Lasso 1"
 tabla_comp_clasif[1,2] <- 
-  tabla_comp_clasif[1,3] <- 
-  tabla_comp_clasif[1,4] <- 
-  tabla_comp_clasif[1,5] <- 
-  tabla_comp_clasif[1,6] <- Matrices_conf[[1]]@byClass$Sensitivity #Sensitivity
+tabla_comp_clasif[1,3] <- 
+tabla_comp_clasif[1,4] <- 
+tabla_comp_clasif[1,5] <- 
+tabla_comp_clasif[1,6] <- Matrices_conf[[1]]@byClass$Sensitivity #Sensitivity
 tabla_comp_clasif[1,7] <- #Specificity
-  tabla_comp_clasif[1,8] <- #Accuracy
-  tabla_comp_clasif[1,9] <- #Puntaje final (75% / 25%)
+tabla_comp_clasif[1,8] <- #Accuracy
+tabla_comp_clasif[1,9] <- #Puntaje final (75% / 25%)
   
   
-  acc_mod1 <- Matrices_conf[[1]]$byClass$Sensitivity
+acc_mod1 <- Matrices_conf[[1]]$byClass$Sensitivity
 
 sens_mod1 <- cmat_lg_1$byClass$Sensitivity
 
@@ -2200,9 +2200,9 @@ stargazer(reg3,type="text")
 #Entrenamiento de modelos CV K-Fold
 
 modelo_estimado1 <- train(modelo1,
-                         data = Tr_train,
-                         trControl=trainControl(method="cv",number=10),
-                         method="lm")
+                          data = Tr_train,
+                          trControl=trainControl(method="cv",number=10),
+                          method="lm")
 
 modelo_estimado2 <- train(modelo2,
                           data = Tr_train,
@@ -2491,7 +2491,8 @@ setwd("~/GitHub/MECA_BD_PS2/document")
 export(submit,"./predictions_garcia_molano_villa_c12_r23.csv")
 
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
