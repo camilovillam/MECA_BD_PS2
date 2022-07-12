@@ -306,15 +306,15 @@ train_personas_jf <- train_personas_jf %>% mutate(
 )
 
 train_personas_jf <- train_personas_jf %>% mutate(
-  jf_sub = if_else(P6050==1 & P6100==3 | P6100==4, 1, 0)
+  jf_sub = if_else(P6050==1 & (P6100==3 | P6100==4), 1, 0)
 )
 
 train_personas_jf <- train_personas_jf %>% mutate(
-  jf_afiliado = if_else(P6050==1 & P6090==2 | P6090==3, 1, 0)
+  jf_afiliado = if_else(P6050==1 & (P6090==2 | P6090==3), 1, 0)
 )
 
 train_personas_jf <- train_personas_jf %>% mutate(
-  jf_sintrabajo = if_else(P6050==1 & P6240==2 | P6240==5, 1, 0)
+  jf_sintrabajo = if_else(P6050==1 & (P6240==2 | P6240==5), 1, 0)
 )
 
 train_personas_jf <- train_personas_jf %>% mutate(
@@ -386,7 +386,7 @@ porcentaje_na <- cantidad_na/nrow(train_h)
 # Porcentaje de observaciones faltantes. 
 p <- mean(porcentaje_na[,1])
 print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
-#En promedio el 8.06% de las entradas están vacías"
+#En promedio el 6.94% de las entradas están vacías"
 
 #Se visualiza el porcentaje de observaciones faltantes por variable
 
@@ -428,14 +428,14 @@ vars_drop <- c("P5100",
                "P5140", 
                "pj_jf_P7422",
                "P5130",
-               "jf_afiliado",
-               "jf_sintrabajo",
                "pj_jf_P7472",
                "jf_nc_pension")
 train_h_si <- train_h[,!(names(train_h) %in% vars_drop)]
 k0 <- ncol(train_h)
 k1 <- ncol(train_h_si)
 print(paste("Se eliminarion", k0-k1, "variables. Ahora la base tiene", k1, "columnas."))
+
+train_h_si_bu <- train_h_si#se guarda bu para crear mas adelante otra base imputando
 
 #se crea train hogares borrando las filas de ht_p1 que están con NA
 
@@ -484,6 +484,8 @@ train_h_si$jf_60_h <- factor(train_h_si$jf_60_h)
 train_h_si$jf_sub <- factor(train_h_si$jf_sub, labels = c("jefe de hogar no subsidiado", "jefe de hogar subsidiado" ))
 train_h_si$pj_jf_ofhogar <- factor(train_h_si$pj_jf_ofhogar)
 train_h_si$pj_jf_sintrabajo <- factor(train_h_si$pj_jf_sintrabajo, labels = c("Pareja Sin Trabajo", "Pareja Con Trabajo"))
+train_h_si$jf_afiliado <- factor(train_h_si$jf_afiliado)
+train_h_si$jf_sintrabajo <- factor(train_h_si$jf_sintrabajo)
 
 #2.4. Guardar la base train ----   
 
@@ -542,14 +544,6 @@ ggplot(train_h_si, aes(x=ht_p1, y=Ingtotug,color=mujer_jf_h)) +
   labs(x='Horas trabajadas Jefe Hogar', y='Ingreso total')
 
 #prueba 2 de gráfica
-Conf2x2 = matrix(c(2:2), nrow=4, byrow=FALSE)
-layout(Conf2x2)
-hist(train_h$Ingtotug,main = "Histograma Ingreso total", xlab = "Ingreso total", col = "skyblue4")
-hist(train_h$horas_trabajadas,main = "Histograma Horas Trabajadas", xlab = "Horas Trabajadas", col = "skyblue4")
-boxplot(train_h$Ingtotug,main = "Boxplot Ingreso total", xlab = "Ingreso total", col = "skyblue4")
-boxplot(train_h$horas_trabajadas,main = "Boxplot Horas Trabajadas", xlab = "Horas Trabajadas", col = "skyblue4")
-
-#prueba 3 de gráfica
 train_h_si_rows <- nrow(train_h_si)
 
 grafica_3 <- 
