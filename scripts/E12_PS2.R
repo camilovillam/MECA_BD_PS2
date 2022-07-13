@@ -2591,30 +2591,6 @@ export(submit,"./predictions_garcia_molano_villa_c14_r32.csv")
 # 6. OTROS MODELOS DE PREDICCIÓN DE INGRESOS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-setwd("/Users/jorgeeduardogarcia/Desktop/BIG_DATA/MECA_BD_PS2")
-train_h <-readRDS("./stores/train_h_si.rds")
-
-
-#Cargar librerías:
-install.packages("pacman")
-require(pacman)
-p_load(rio, 
-       tidyverse, 
-       skimr, 
-       caret,
-       rvest,
-       stargazer,
-       revest,
-       fabricatr,
-       GGally,
-       tableone,
-       arsenal,
-       janitor,
-       pacmam)
-
-#Dado que se debe realizar la predicciónn del ingreso, se escoge la variable Ingtotugarr
-predict <- stats::predict
-
 # se realizan diferentes boxplot de las variables aparentemente m?s releventes 
 
 boxplot(train_h$Ingtotug,main = "BOXPLOT - Ingreso Total", xlab = "Ingreso total", col = "110")
