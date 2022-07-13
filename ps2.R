@@ -161,3 +161,4 @@ Matriz_elnet1 <- confusionMatrix(data=Tr_test$clasif_pobre_elnet1,
 
 ##SE COMPARAN LOS MODELOS
 models <- list(lasso1, Model_ridge1, Model_1_elnet1)
+here
