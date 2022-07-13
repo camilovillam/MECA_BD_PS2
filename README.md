@@ -13,4 +13,4 @@ Bienvenido al repositorio del `Problem Set 2` del Equipo 12, resuelto por:
 - En la carpeta Script (del main branch) se encuentra el código comentado con la solución.
 
 
-Última edición: 29/06/2022
+Última edición:12/07/2022

@@ -13,51 +13,18 @@
 # 0. PRELIMINARES: PREPARACIÓN ESPACIO DE TRABAJO Y LIBRERÍAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#Limpiar el entorno:
+##Limpiar el entorno ----
 rm(list=ls())
 
-#Instalar librerías
-install.packages("rvest")
-install.packages("fabricatr")
-install.packages("stargazer")
-install.packages('GGally')# Se instala un paquete para gráficos
-install.packages("pacman")
-install.packages("arsenal")
-install.packages("janitor")
-install.packages("gamlr")
 
-#Cargar librerías:
-library(rvest)
-library(tidyverse)
-library(fabricatr)
-library(stargazer)
-library(caret)
-library(GGally)
-library(tableone)
-library(caret)
-library(arsenal)
-library(janitor)
-require(pacman)
-require(gamlr)
-p_load(rio, 
-       tidyverse, 
-       skimr, 
-       caret,
-       rvest,
-       stargazer)
-
-
-#Recomendación de Eduard: 09/07/2022
-
-#p_load instala y carga, en ese sentido es eficiente.
-#Si no queremos usar p_load, install + require (o library)
-#Pero no ambos, pues es redudante. Mantenerlo consistente.
-
+##Carga de librerías ----
 install.packages("pacman")
 library(pacman)
 
 p_load(rio,
        doParallel,
+       gtsummary,
+       GGally,
        stargazer,
        fabricatr,
        tableone,
@@ -79,15 +46,14 @@ p_load(rio,
        xgboost)
 
 
-## Resolver conflictos de paquetes
-#(Definir cuáles variables usar)
+## Resolver conflictos de paquetes ----
 predict <- stats::predict
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1. CARGUE DE LAS BASES DE DATOS Y EXPLORACIÓN INICIAL----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-##1.1. Cargue de las bases de datos ---- 
+## 1.1. Cargue de las bases de datos ---- 
 
 setwd("~/GitHub/MECA_BD_PS2")
 submission_template <-read.csv("./stores/20220703_data/submission_template.csv")
@@ -142,7 +108,7 @@ summary(comparedf(train_personas,test_personas))
 # 2. PREPARACIÓN DE LA BASE DE DATOS TRAIN Y ESTADÍSTICAS DESCRIPTIVAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#2.1. Primera definición base train----
+## 2.1. Primera definición base train----
 
 #Se hace un primer filtro dejando en la base train las variables que están en el test de hogares
 #Se dejan 2 variables de trian hogares que no están en tres hogares Pobre e Ingtotug
@@ -415,7 +381,7 @@ train_h0 <-
              by = c("id"))
 
 
-#2.2. Identificar NAs base train_h ---- 
+##2.2. Identificar NAs base train_h ---- 
 
 train_h <- train_h0
 cantidad_na <- sapply(train_h, function(x) sum(is.na(x)))
@@ -483,7 +449,7 @@ train_h_si <- train_h_si [is.finite(train_h_si$ht_p1), ] #pasa de 155089 a 14723
 train_h_si <- train_h_si %>% filter(!is.na(pj_jf_ofhogar)) #pasa de 147231 a 147215 obs
 train_h_si <- train_h_si %>% filter(!is.na(pj_jf_sintrabajo)) #pasa de 147215a 147215 obs
 
-#2.3. Convertir en factor variables de base train y etiquetar---- 
+##2.3. Convertir en factor variables de base train y etiquetar---- 
 
 #se llama la librería haven 
 library(haven)
@@ -526,14 +492,14 @@ train_h_si$pj_jf_sintrabajo <- factor(train_h_si$pj_jf_sintrabajo, labels = c("P
 train_h_si$jf_afiliado <- factor(train_h_si$jf_afiliado)
 train_h_si$jf_sintrabajo <- factor(train_h_si$jf_sintrabajo)
 
-#2.4. Guardar la base train ----   
+##2.4. Guardar la base train ----   
 
 #Se guarda la base de datos en un archivo .rds
 setwd("~/GitHub/MECA_BD_PS2")
 saveRDS(train_h_si,"./stores/train_h_si.rds")
 
 
-#2.5. Tablas descriptivas ---- 
+##2.5. Tablas descriptivas ---- 
 
 #se carga la base ajustada
 setwd("~/GitHub/MECA_BD_PS2")
@@ -575,7 +541,7 @@ train_h_si %>%
   add_n()
 
 
-#2.6. Gráficas para el análisis de datos---- 
+##2.6. Gráficas para el análisis de datos---- 
 
 #prueba 1 de gráfica
 ggplot(train_h_si, aes(x=ht_p1, y=Ingtotug,color=mujer_jf_h)) + 
@@ -613,7 +579,7 @@ figuras_3_y_4 <- ggarrange(grafica_3, grafica_4,
 # Ver figura
 figuras_3_y_4
  
-#2.7. Identificar variables importantes en modelo de clasificación---- 
+##2.7. Identificar variables importantes en modelo de clasificación---- 
 
 # Se cargan las librerías necesarias
 library(pacman)
@@ -667,7 +633,7 @@ summary (train_h_si$P5010)
 # 3. PREPARACIÓN DE LA BASE DE DATOS TEST Y ESTADÍSTICAS DESCRIPTIVAS----
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#3.1. Primera definición base test----
+##3.1. Primera definición base test----
 
 test_h0 <- test_hogares
 
@@ -918,7 +884,7 @@ test_h0 <-
              by = c("id"))
 
 
-#3.2. Identificar NAs base test_h ---- 
+##3.2. Identificar NAs base test_h ---- 
 
 test_h <- test_h0
 cantidad_na <- sapply(test_h, function(x) sum(is.na(x)))
@@ -1069,7 +1035,7 @@ test_h_si <- test_h_si %>% rename(
   of_p1 = of_p1_SINF
 )
 
-#3.3. Convertir en factor variables de base test ---- 
+##3.3. Convertir en factor variables de base test ---- 
 
 test_h_si$P5000 <- factor(test_h_si$P5000)
 test_h_si$P5010 <- factor(test_h_si$P5010)
@@ -1107,7 +1073,7 @@ test_h_si$pj_jf_sintrabajo <- factor(test_h_si$pj_jf_sintrabajo, labels = c("Par
 test_h_si$jf_afiliado <- factor(test_h_si$jf_afiliado)
 test_h_si$jf_sintrabajo <- factor(test_h_si$jf_sintrabajo)
 
-#3.4. Guardar la base test ----   
+##3.4. Guardar la base test ----   
 
 #Se guarda la base de datos en un archivo .rds
 setwd("~/GitHub/MECA_BD_PS2")
@@ -2048,64 +2014,100 @@ Matrices_conf <- list(cmat_lg_1,
 
 
 tabla_comp_clasif <- matrix(rep(0,19*9),nrow=19,ncol=9)
-colnames(tabla_comp_clasif) <- c("Modelo","TN","FN","TP","FP","Sensitivity","Specificity","Accuracy")
+colnames(tabla_comp_clasif) <- c("Modelo","TN","FN","FP","TP","Sensitivity","Specificity","Accuracy","Puntaje_final")
 
-#Ejemplo para una matriz de confusión:
+#Nombre de los modelos a comparar:
 
-tabla_comp_clasif[1,1] <- "Lasso 1"
-tabla_comp_clasif[1,2] <- 
-tabla_comp_clasif[1,3] <- 
-tabla_comp_clasif[1,4] <- 
-tabla_comp_clasif[1,5] <- 
-tabla_comp_clasif[1,6] <- Matrices_conf[[1]]@byClass$Sensitivity #Sensitivity
-tabla_comp_clasif[1,7] <- #Specificity
-tabla_comp_clasif[1,8] <- #Accuracy
-tabla_comp_clasif[1,9] <- #Puntaje final (75% / 25%)
+tabla_comp_clasif[1,1] <- "Logit 1"
+tabla_comp_clasif[2,1] <- "Logit 2"
+tabla_comp_clasif[3,1] <- "Logit 3"
+tabla_comp_clasif[4,1] <- "Logit 4"
+tabla_comp_clasif[5,1] <- "Logit 5"
+tabla_comp_clasif[6,1] <- "Logit 4 CV Cut-off óptimo"
+tabla_comp_clasif[7,1] <- "Logit 4 CV upsampled"
+tabla_comp_clasif[8,1] <- "Logit 4 CV downsampled"
+tabla_comp_clasif[9,1] <- "Lasso Sens upsample"
+tabla_comp_clasif[10,1] <- "XGBoost downsampled"
+tabla_comp_clasif[11,1] <- "Tree"
+tabla_comp_clasif[12,1] <- "Tree upsampled"
+tabla_comp_clasif[13,1] <- "Tree downsampled"
+tabla_comp_clasif[14,1] <- "XGBoost"
+tabla_comp_clasif[15,1] <- "XGBoost upsampled"
+tabla_comp_clasif[16,1] <- "Lasso sens"
+tabla_comp_clasif[17,1] <- "Lasso roc"
+tabla_comp_clasif[18,1] <- "Lasso acc"
+tabla_comp_clasif[19,1] <- "Lasso sens upsampled"
+
+
+#Se guardan los valores de las matrices de confusión en una tabla comparativa
+
+for(i in 1:length(Matrices_conf)) {
   
+  tabla_comp_clasif[i,2] <- Matrices_conf[[i]][["table"]][1,1]
+  tabla_comp_clasif[i,3] <- Matrices_conf[[i]][["table"]][1,2]
+  tabla_comp_clasif[i,4] <- Matrices_conf[[i]][["table"]][2,1]
+  tabla_comp_clasif[i,5] <- Matrices_conf[[i]][["table"]][2,2]
+  tabla_comp_clasif[i,6] <- Matrices_conf[[i]]$byClass["Sensitivity"] #Sensitivity
+  tabla_comp_clasif[i,7] <- Matrices_conf[[i]]$byClass["Specificity"] #Specificity
+  tabla_comp_clasif[i,8] <- Matrices_conf[[i]]$overall["Accuracy"] #Accuracy
+  tabla_comp_clasif[i,9] <- (as.numeric(tabla_comp_clasif[i,6])*0.75)+as.numeric(tabla_comp_clasif[i,7])*0.25 #Puntaje final (75% / 25%)
   
-acc_mod1 <- Matrices_conf[[1]]$byClass$Sensitivity
+}
 
-sens_mod1 <- cmat_lg_1$byClass$Sensitivity
+#Se encuentra el número del modelo con el mayor puntaje:
+mej_mod_clas <- which.max(tabla_comp_clasif[,9])
+
+print(paste0("El modelo de clasificación con el mejor puntaje de sensibilidad y especificadad es el # ",
+             mej_mod_clas,". Su sensitividad es: ",
+             tabla_comp_clasif[mej_mod_clas,6], ", Su especificidad es: ",
+             tabla_comp_clasif[mej_mod_clas,7]))
 
 
 view(tabla_comp_clasif)
-tabla_comp_clasif
+tabla_comp_clas_orden <- tabla_comp_clasif[order(tabla_comp_clasif[,9], decreasing=TRUE),]
+stargazer(tabla_comp_clas_orden,type="text")
+
 
 ##4.7. Exportación final ----
 
 
-modelo_final <- caret_logit
+modelo_final <- mod_logit_4
+fmodelo_final <- fmodelo4
+
+fmodelo_final
 
 setwd("~/GitHub/MECA_BD_PS2")
 test_h <-readRDS("./stores/test_h_si.rds")
 
 nrow(test_h)
 
+#Validación y ajuste de factores con los mismos niveles en ambas bases
+
 levels(Tr_train$P5000)
 levels(Tr_test$P5000)
 levels(test_h$P5000)
-levels(test_h$jf_sub)
-levels(Tr_test$jf_sub)
+levels(Tr_train$P5010)
+levels(Tr_test$P5010)
+levels(test_h$P5010)
+
+table(test_h$P5000)
+table(test_h$P5010)
+
+test_h$P5000[test_h$P5000==43] <- 12
+test_h$P5010[test_h$P5010==9] <- 8
+
+table(test_h$P5000)
+table(test_h$P5010)
 
 ## Predecir el modelo final:
+test_h$prediccion_final <- predict(modelo_final, test_h)
 
-#TEMPORAL!
-test_h <- test_h[!(test_h$P5000=="43"),]
-test_h$jf_sub <- factor(test_h$jf_sub,levels=c("0","1"),labels=c("jefe de hogar no subsidiado","jefe de hogar subsidiado"))
+## Generar la clasificación final:
+# Usamos el mismo cut-off que entregó los mejores resultados,
+# calculado a partir del diagrama de cajas y bigotes
+test_h$Pobre_classification <- ifelse(test_h$prediccion_final < 0.18,0,1)
 
-
-test_h$prediccion_final <- predict(modelo_final, test_h , type="prob")[2]
-test_h$Pobre_classification <- ifelse(test_h$prediccion_final < rfThresh$threshold,0,1)
-
-submit  <-  test_h[,c("id","Pobre_classification")]
-
-fmodelo5
-
-## Guardar el .CSV
-setwd("~/GitHub/MECA_BD_PS2/document")
-export(submit,"./predictions_garcia_molano_villa_c12_r5.csv")
-
-
+fmodelo_final
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2122,6 +2124,14 @@ train_h <-readRDS("./stores/train_h_si.rds")
 #se crean variables
 #train_h$ln_ing <- log(train_h$Ingtotug)
 train_h <- train_h %>% mutate (edadjf_cua= edad_p1*edad_p1)
+Tr_train <- Tr_train %>% mutate (edadjf_cua= edad_p1*edad_p1)
+Tr_test <- Tr_test %>% mutate (edadjf_cua= edad_p1*edad_p1)
+
+
+# #Se ajustan los factores:
+# train_h$Pobre <- factor(train_h$Pobre,levels=c("No Pobre","Pobre"),labels=c("No_pobre","Pobre"))
+# 
+# table(train_h$Pobre)
 
 #NOTA: Se eliminan las filas  que tienen Inf de la variable ln_ing (revisar cuando se termine el P2)
 #train_h <- train_h[is.finite(train_h$ln_ing), ]
@@ -2151,8 +2161,6 @@ Tr_test <- other[-split2,]
 
 
 ##5.3. Modelos de regresión ----
-
-require("stargazer")
 
 modelo1 <- as.formula (Ingtotug ~ Clase+Dominio+
                          mujer_jf_h+
@@ -2244,9 +2252,9 @@ Tr_test$y3 <- modelo_predicho3
 
 #Determinar si es pobre o no
 
-Tr_test$pobre_clas_ing1 <- factor(if_else( Tr_test$y1 < Tr_test$Lp, "Pobre", "No Pobre"))
-Tr_test$pobre_clas_ing2 <- factor(if_else( Tr_test$y2 < Tr_test$Lp, "Pobre", "No Pobre"))
-Tr_test$pobre_clas_ing3 <- factor(if_else( Tr_test$y3 < Tr_test$Lp, "Pobre", "No Pobre"))
+Tr_test$pobre_clas_ing1 <- factor(if_else( Tr_test$y1 < Tr_test$Lp, "Pobre", "No_pobre"))
+Tr_test$pobre_clas_ing2 <- factor(if_else( Tr_test$y2 < Tr_test$Lp, "Pobre", "No_pobre"))
+Tr_test$pobre_clas_ing3 <- factor(if_else( Tr_test$y3 < Tr_test$Lp, "Pobre", "No_pobre"))
 
 summary(Tr_test$pobre_clas_ing1)
 summary(Tr_test$pobre_clas_ing2)
@@ -2263,6 +2271,7 @@ cm2 <- confusionMatrix(data=Tr_test$pobre_clas_ing2,
 cm3 <- confusionMatrix(data=Tr_test$pobre_clas_ing3, 
                        reference=Tr_test$Pobre , 
                        mode="sens_spec" , positive="Pobre")
+
 
 
 ##5.4. Lasso, Ridge, Elastic Net de los modelos ----
@@ -2459,12 +2468,82 @@ cm_elnet2
 cm_elnet3
 
 
+
+#Tabla de comparación:
+
+#Guardamos todas las matrices de confusión en una lista:
+
+
+Matrices_conf_ing <- list(cm1,
+                          cm2,
+                          cm3,
+                          cm_lass1,
+                          cm_lass2,
+                          cm_lass3,
+                          cm_ridge1,
+                          cm_ridge2,
+                          cm_ridge3,
+                          cm_elnet1,
+                          cm_elnet2,
+                          cm_elnet3)
+
+
+tabla_comp_pred_ing <- matrix(rep(0,12*8),nrow=12,ncol=8)
+colnames(tabla_comp_pred_ing) <- c("Modelo","TN","FN","FP","TP","Sensitivity","Specificity","Accuracy")
+
+#Nombre de los modelos a comparar:
+
+tabla_comp_pred_ing[1,1] <- "Linear model 1"
+tabla_comp_pred_ing[2,1] <- "Linear model 2"
+tabla_comp_pred_ing[3,1] <- "Linear model 3"
+tabla_comp_pred_ing[4,1] <- "Lasso 1"
+tabla_comp_pred_ing[5,1] <- "Lasso 2"
+tabla_comp_pred_ing[6,1] <- "Lasso 3"
+tabla_comp_pred_ing[7,1] <- "Ridge 1"
+tabla_comp_pred_ing[8,1] <- "Ridge 2"
+tabla_comp_pred_ing[9,1] <- "Ridge 3"
+tabla_comp_pred_ing[10,1] <- "Elastic Net 1"
+tabla_comp_pred_ing[11,1] <- "Elastic Net 2"
+tabla_comp_pred_ing[12,1] <- "Elastic Net 3"
+
+
+#Se guardan los valores de las matrices de confusión en una tabla comparativa
+
+for(i in 1:length(Matrices_conf_ing)) {
+  
+  tabla_comp_pred_ing[i,2] <- Matrices_conf_ing[[i]][["table"]][1,1]
+  tabla_comp_pred_ing[i,3] <- Matrices_conf_ing[[i]][["table"]][1,2]
+  tabla_comp_pred_ing[i,4] <- Matrices_conf_ing[[i]][["table"]][2,1]
+  tabla_comp_pred_ing[i,5] <- Matrices_conf_ing[[i]][["table"]][2,2]
+  tabla_comp_pred_ing[i,6] <- Matrices_conf_ing[[i]]$byClass["Sensitivity"] #Sensitivity
+  tabla_comp_pred_ing[i,7] <- Matrices_conf_ing[[i]]$byClass["Specificity"] #Specificity
+  tabla_comp_pred_ing[i,8] <- Matrices_conf_ing[[i]]$overall["Accuracy"] #Accuracy
+  
+}
+
+#Se encuentra el número del modelo con el mayor puntaje:
+mej_mod_pred <- which.max(tabla_comp_pred_ing[,6])
+
+print(paste0("El modelo de clasificación con el mejor puntaje de sensibilidad es el # ",
+             mej_mod_pred,". Su sensitividad es: ",
+             tabla_comp_pred_ing[mej_mod_pred,6], ". Su especificidad es: ",
+             tabla_comp_pred_ing[mej_mod_pred,7]))
+
+
+view(tabla_comp_pred_ing)
+tabla_comp_pred_orden <- tabla_comp_pred_ing[order(tabla_comp_pred_ing[,6], decreasing=TRUE),]
+stargazer(tabla_comp_pred_orden,type="text")
+
+
+
 ##5.5. Exportación final ----
 
-modelo_final_ing <- elnet2
+modelo_final_ing <- reg2
 
 setwd("~/GitHub/MECA_BD_PS2")
 test_h <-readRDS("./stores/test_h_si.rds")
+
+test_h <- test_h %>% mutate (edadjf_cua= edad_p1*edad_p1)
 
 nrow(test_h)
 
@@ -2480,15 +2559,32 @@ test_h$edadjf_cua <- test_h$edad_p1^2
 test_h$pred_ing_final <- predict(modelo_final_ing,newdata = test_h)
 test_h$Pobre_income <- if_else(test_h$pred_ing_final < test_h$Lp,1,0)
 
+test_h$Comparacion_final <- test_h$Pobre_classification - test_h$Pobre_income
+
+table(test_h$Comparacion_final)
+nrow(test_h)
+
+56723/nrow(test_h)
+
 
 #submit  <-  test_h[,c("id","Pobre_classification")]
 
-submit  <-  test_h[,c("id","Pobre_income")]
-elnet1
+submit  <-  test_h[,c("id","Pobre_classification","Pobre_income")]
+
+head(submit)
+table(submit$Pobre_classification)
+table(submit$Pobre_income)
+
+prop.table(table(submit$Pobre_classification))
+prop.table(table(submit$Pobre_income))
+
+
+fmodelo_final
+modelo2
 
 ## Guardar el .CSV
 setwd("~/GitHub/MECA_BD_PS2/document")
-export(submit,"./predictions_garcia_molano_villa_c12_r23.csv")
+export(submit,"./predictions_garcia_molano_villa_c14_r32.csv")
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
